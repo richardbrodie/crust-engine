@@ -1,4 +1,4 @@
-use std::{fs::File, time::Duration};
+use std::{fs::File, path::Path, time::Duration};
 
 use crate::{
     geometry::{Point, Rect, Vec2},
@@ -23,10 +23,6 @@ impl Bitmap {
     }
 
     pub fn row(&self, rownum: usize) -> &[u8] {
-        // let row_len = self.size.0 * 4;
-        // let a = rownum * row_len;
-        // let b = a + row_len;
-        // &self.data[a..b]
         self.row_partial(rownum, self.size.0)
     }
     pub fn row_partial(&self, rownum: usize, len: usize) -> &[u8] {
@@ -34,6 +30,9 @@ impl Bitmap {
         let a = rownum * full_row;
         let b = a + (len * 4);
         &self.data[a..b]
+    }
+    pub fn data(&self) -> &[u8] {
+        &self.data
     }
 }
 
@@ -82,15 +81,15 @@ impl AnimatedImage {
         }
     }
     pub fn update(&mut self, dt: Duration) {
-        let f = self.current_frame().interval;
         self.last_frame_change += dt;
+        let f = self.current_frame().interval;
         if self.last_frame_change >= f {
-            if self.current_frame_idx < self.data.len() - 1 {
-                self.current_frame_idx += 1;
-            } else {
-                self.current_frame_idx = 0;
-            }
             self.last_frame_change -= f;
+            if self.current_frame_idx == self.data.len() - 1 {
+                self.current_frame_idx = 0;
+            } else {
+                self.current_frame_idx += 1;
+            }
         }
     }
     fn current_frame(&self) -> &Frame {
@@ -117,7 +116,7 @@ pub enum Image {
     Static(StaticImage),
 }
 impl Image {
-    pub fn load(path: &str) -> Self {
+    pub fn load<T: AsRef<Path>>(path: T) -> Self {
         let image_file = File::open(path).unwrap();
         let decoder = png::Decoder::new(image_file);
         let mut reader = decoder.read_info().unwrap();
@@ -151,16 +150,7 @@ impl Image {
 mod tests {
     use std::time::Duration;
 
-    use crate::{composit_pixel, image::Image};
-
-    #[test]
-    fn test_composit() {
-        let mut bg = [128, 64, 32, 255];
-        let obj = [255, 128, 64, 128];
-        let res = [191, 96, 48, 255];
-        composit_pixel(&mut bg, &obj);
-        assert_eq!(bg, res);
-    }
+    use crate::image::Image;
 
     #[test]
     fn test_load_static_image() {
