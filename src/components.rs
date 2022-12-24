@@ -97,11 +97,10 @@ impl Scenery {
 
 pub fn update_location(loc: Point, dest: Point, speed: f64, dt: Duration) -> Point {
     let diff = dest - loc;
-    let hyp = (diff.0 * diff.0 + diff.1 * diff.1).sqrt();
+    let hyp = (diff.x * diff.x + diff.y * diff.y).sqrt();
 
     let dist_moved = speed * dt.as_millis() as f64;
     if dist_moved >= hyp {
-        info!("arrived");
         dest
     } else {
         let p_hyp = dist_moved / hyp;
@@ -116,15 +115,15 @@ mod tests {
 
     use crate::{
         components::{Actor, Updatable},
-        geometry::Vec2,
+        geometry::Point,
         image::Image,
     };
 
     #[test]
     fn test_sprite_destination() {
         let image = "resources/fox.png";
-        let mut sprite = Actor::new(image, Vec2(0.0, 0.0), None);
-        let dest = Vec2(10.0, 10.0);
+        let mut sprite = Actor::new(image, Point::new(0.0, 0.0), None);
+        let dest = Point::new(10.0, 10.0);
 
         assert_eq!(sprite.destination, None);
         sprite.set_destination(dest);
@@ -137,15 +136,15 @@ mod tests {
         let dt = Duration::from_secs_f64(0.1);
         let mut sprite = Actor {
             image,
-            location: Vec2(0.0, 0.0),
-            destination: Some(Vec2(10.0, 10.0)),
+            location: Point::new(0.0, 0.0),
+            destination: Some(Point::new(10.0, 10.0)),
             movement_speed: Some(0.05),
         };
         sprite.tick(dt);
 
         assert_eq!(
             sprite.location,
-            Vec2(3.5355339059327373, 3.5355339059327373)
+            Point::new(3.5355339059327373, 3.5355339059327373)
         );
     }
 }

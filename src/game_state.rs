@@ -6,7 +6,7 @@ use winit::event::ElementState;
 use crate::{
     buffer::Buffer,
     components::{Actor, Object, Scenery, Updatable},
-    geometry::{Point, Vec2},
+    geometry::Point,
 };
 
 pub const TICK: Duration = Duration::from_millis(1000 / 60);
@@ -25,8 +25,8 @@ impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
         let ball_image = "resources/ball.png";
-        let character = Actor::new(character_image, Vec2(10.0, 10.0), Some(0.1));
-        let actors = vec![Actor::new(ball_image, Vec2(50.0, 50.0), None)];
+        let character = Actor::new(character_image, Point::new(10.0, 10.0), Some(0.1));
+        let actors = vec![Actor::new(ball_image, Point::new(50.0, 50.0), None)];
         let scenery = Scenery::new();
 
         Self {
@@ -36,7 +36,7 @@ impl GameState {
             actors,
             objects: vec![],
             scenery,
-            mouse_location: Vec2(0.0, 0.0),
+            mouse_location: Point::new(0.0, 0.0),
             mouse_click: false,
         }
     }

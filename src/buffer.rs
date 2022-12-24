@@ -1,6 +1,7 @@
 use std::cmp;
 
-use crate::geometry::{Point, Rect, Vec2};
+use crate::error::Error;
+use crate::geometry::{Point, Rect};
 use crate::image::Bitmap;
 use pixels::{Pixels, SurfaceTexture};
 use winit::{dpi::PhysicalSize, window::Window};
@@ -12,9 +13,9 @@ pub struct Buffer {
 }
 impl Buffer {
     pub fn new(window: &Window) -> Self {
-        let size: Rect = Vec2(640, 465);
-        let surface_texture = SurfaceTexture::new(size.0 as u32, size.1 as u32, &window);
-        let pixels = Pixels::new(size.0 as u32, size.1 as u32, surface_texture).unwrap();
+        let size = Rect::new(640, 465);
+        let surface_texture = SurfaceTexture::new(size.width as u32, size.height as u32, &window);
+        let pixels = Pixels::new(size.width as u32, size.height as u32, surface_texture).unwrap();
         Self { data: pixels, size }
     }
     pub fn draw_slice(&mut self, data: &[u8]) {
@@ -25,12 +26,12 @@ impl Buffer {
         let buffer = self.data.get_frame_mut();
 
         // clipping
-        let rows = cmp::min(bmp.rows(), self.size.1 - pos.1 as usize);
-        let cols = cmp::min(bmp.cols(), self.size.0 - pos.0 as usize);
+        let rows = cmp::min(bmp.rows(), self.size.height - pos.y as usize);
+        let cols = cmp::min(bmp.cols(), self.size.width - pos.x as usize);
 
         // draw
         for rownum in 0..rows {
-            let lstart = (pos.1 as usize + rownum) * (self.size.0 * 4) + (pos.0 as usize * 4);
+            let lstart = (pos.y as usize + rownum) * (self.size.width * 4) + (pos.x as usize * 4);
             for (i, pixel) in bmp.row_partial(rownum, cols).chunks_exact(4).enumerate() {
                 let idx = lstart + (i * 4);
                 let base = &mut buffer[idx..idx + 4];
@@ -38,8 +39,10 @@ impl Buffer {
             }
         }
     }
-    pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        self.data.resize_surface(size.width, size.height).unwrap();
+    pub fn resize(&mut self, size: PhysicalSize<u32>) -> Result<(), Error> {
+        self.data
+            .resize_surface(size.width, size.height)
+            .map_err(|e| e.into())
     }
     pub fn render(&self) {
         self.data.render().unwrap();

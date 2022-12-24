@@ -1,7 +1,7 @@
 use std::{fs::File, path::Path, time::Duration};
 
 use crate::{
-    geometry::{Point, Rect, Vec2},
+    geometry::{Point, Rect},
     Buffer,
 };
 
@@ -16,17 +16,17 @@ impl Bitmap {
         Self { data: buf, size }
     }
     pub fn cols(&self) -> usize {
-        self.size.0
+        self.size.width
     }
     pub fn rows(&self) -> usize {
-        self.size.1
+        self.size.height
     }
 
     pub fn row(&self, rownum: usize) -> &[u8] {
-        self.row_partial(rownum, self.size.0)
+        self.row_partial(rownum, self.size.width)
     }
     pub fn row_partial(&self, rownum: usize, len: usize) -> &[u8] {
-        let full_row = self.size.0 * 4;
+        let full_row = self.size.width * 4;
         let a = rownum * full_row;
         let b = a + (len * 4);
         &self.data[a..b]
@@ -49,10 +49,10 @@ impl Frame {
         buf.truncate(frame.buffer_size());
         let fc = &reader.info().frame_control().unwrap();
         let interval = Duration::from_secs_f64(fc.delay_num as f64 / fc.delay_den as f64);
-        let size = Vec2(fc.width as usize, fc.height as usize);
+        let size = Rect::new(fc.width as usize, fc.height as usize);
         Frame {
             data: Bitmap::new(buf, size),
-            offset: Vec2(fc.x_offset as f64, fc.y_offset as f64),
+            offset: Point::new(fc.x_offset as f64, fc.y_offset as f64),
             interval,
         }
     }
@@ -121,7 +121,7 @@ impl Image {
         let decoder = png::Decoder::new(image_file);
         let mut reader = decoder.read_info().unwrap();
         let img_info = reader.info();
-        let size = Vec2(img_info.width as usize, img_info.height as usize);
+        let size = Rect::new(img_info.width as usize, img_info.height as usize);
         if reader.info().is_animated() {
             let frames: Vec<_> = (0..img_info.animation_control().unwrap().num_frames)
                 .map(|_| Frame::new(&mut reader))
