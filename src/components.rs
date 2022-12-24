@@ -2,11 +2,7 @@ use std::{path::Path, time::Duration};
 
 use tracing::info;
 
-use crate::{
-    geometry::{Point, Vec2},
-    image::Image,
-    Buffer,
-};
+use crate::{geometry::Point, image::Image, Buffer};
 
 pub trait Updatable {
     fn mouse_over(&mut self, p: Point);
@@ -32,11 +28,11 @@ pub struct Actor {
     movement_speed: Option<f64>,
 }
 impl Actor {
-    pub fn new<T: AsRef<Path>>(path: T, ms: Option<f64>) -> Self {
+    pub fn new<T: AsRef<Path>>(path: T, loc: Point, ms: Option<f64>) -> Self {
         let image = Image::load(path);
         Self {
             image,
-            location: Vec2(10.0, 10.0),
+            location: loc,
             destination: None,
             movement_speed: ms,
         }
@@ -127,7 +123,7 @@ mod tests {
     #[test]
     fn test_sprite_destination() {
         let image = "resources/fox.png";
-        let mut sprite = Actor::new(image, None);
+        let mut sprite = Actor::new(image, Vec2(0.0, 0.0), None);
         let dest = Vec2(10.0, 10.0);
 
         assert_eq!(sprite.destination, None);

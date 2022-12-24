@@ -12,19 +12,9 @@ pub struct Buffer {
 }
 impl Buffer {
     pub fn new(window: &Window) -> Self {
-        // let size: Rect = window.inner_size().into();
         let size: Rect = Vec2(640, 465);
         let surface_texture = SurfaceTexture::new(size.0 as u32, size.1 as u32, &window);
-        let pixels = Pixels::new(
-            // window_size.width as u32,
-            // window_size.height as u32,
-            // 640,
-            // 465,
-            size.0 as u32,
-            size.1 as u32,
-            surface_texture,
-        )
-        .unwrap();
+        let pixels = Pixels::new(size.0 as u32, size.1 as u32, surface_texture).unwrap();
         Self { data: pixels, size }
     }
     pub fn draw_slice(&mut self, data: &[u8]) {
@@ -33,9 +23,6 @@ impl Buffer {
     }
     pub fn draw_to(&mut self, bmp: &Bitmap, pos: Point) {
         let buffer = self.data.get_frame_mut();
-        // buffer
-        //     .chunks_exact_mut(4)
-        //     .for_each(|c| c.copy_from_slice(&[0, 0, 0, 255]));
 
         // clipping
         let rows = cmp::min(bmp.rows(), self.size.1 - pos.1 as usize);

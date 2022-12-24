@@ -23,16 +23,17 @@ pub struct GameState {
 }
 impl GameState {
     pub fn new() -> Self {
-        let image = "resources/fox.png";
-        // let image = Image::load("resources/ball.png");
-        let character = Actor::new(image, Some(0.1));
+        let character_image = "resources/fox.png";
+        let ball_image = "resources/ball.png";
+        let character = Actor::new(character_image, Vec2(10.0, 10.0), Some(0.1));
+        let actors = vec![Actor::new(ball_image, Vec2(50.0, 50.0), None)];
         let scenery = Scenery::new();
 
         Self {
             exit_requested: false,
             previous_time: Instant::now(),
             character,
-            actors: vec![],
+            actors,
             objects: vec![],
             scenery,
             mouse_location: Vec2(0.0, 0.0),
@@ -40,8 +41,6 @@ impl GameState {
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
-        // if let Ok(pos) =
-        //     self.click_pos = match self.buffer.window_pos_to_pixel(pos.into()) {
         self.mouse_location = loc;
     }
     pub fn mouse_click(&mut self, state: ElementState) {
@@ -63,17 +62,17 @@ impl GameState {
             self.character.tick(delta);
             self.character.draw(buffer);
 
-            // self.objects.iter_mut().for_each(|s| {
-            //     s.mouse_over(self.mouse_location);
-            //     s.tick(delta);
-            //     s.draw(buffer);
-            // });
-            //
-            // self.actors.iter_mut().for_each(|s| {
-            //     s.mouse_over(self.mouse_location);
-            //     s.tick(delta);
-            //     s.draw(buffer);
-            // });
+            self.objects.iter_mut().for_each(|s| {
+                s.mouse_over(self.mouse_location);
+                s.tick(delta);
+                s.draw(buffer);
+            });
+
+            self.actors.iter_mut().for_each(|s| {
+                s.mouse_over(self.mouse_location);
+                s.tick(delta);
+                s.draw(buffer);
+            });
         }
         delta >= TICK
     }
