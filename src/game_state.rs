@@ -11,6 +11,11 @@ use crate::{
 
 pub const TICK: Duration = Duration::from_millis(1000 / 60);
 
+struct WalkLine {
+    start: Point,
+    end: Point,
+}
+
 pub struct GameState {
     pub exit_requested: bool,
     previous_time: Instant,
@@ -20,6 +25,7 @@ pub struct GameState {
     actors: Vec<Actor>,
     objects: Vec<Object>,
     scenery: Scenery,
+    walkline: Option<WalkLine>,
 }
 impl GameState {
     pub fn new() -> Self {
@@ -38,21 +44,33 @@ impl GameState {
             scenery,
             mouse_location: Point::new(0.0, 0.0),
             mouse_click: false,
+            walkline: None,
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
         self.mouse_location = loc;
     }
     pub fn mouse_click(&mut self, state: ElementState) {
-        info!("mouse click");
-        self.mouse_click = state == ElementState::Pressed;
+        if state == ElementState::Pressed {
+            info!("click");
+            self.walkline = Some(WalkLine {
+                start: self.character.location,
+                end: self.mouse_location,
+            });
+            self.mouse_click = true;
+        }
     }
     pub fn tick(&mut self, buffer: &mut Buffer) -> bool {
         let delta = self.previous_time.elapsed();
         if delta >= TICK {
+            let (ls, le) = match &self.walkline {
+                Some(wl) => (wl.start, wl.end),
+                None => (self.character.location, self.mouse_location),
+            };
             self.previous_time = Instant::now();
 
             self.scenery.draw(buffer);
+            buffer.draw_line(ls, le);
 
             self.character.mouse_over(self.mouse_location);
             if self.mouse_click {
@@ -73,6 +91,9 @@ impl GameState {
                 s.tick(delta);
                 s.draw(buffer);
             });
+            if self.character.destination.is_none() {
+                self.walkline = None;
+            }
         }
         delta >= TICK
     }

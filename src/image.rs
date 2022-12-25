@@ -136,11 +136,11 @@ impl Image {
     }
     pub fn draw(&self, buf: &mut Buffer, p: Point) {
         match self {
-            Self::Static(i) => buf.draw_to(i.data(), p),
+            Self::Static(i) => buf.draw_bmp(i.data(), p),
             Self::Animated(a) => {
                 let f = a.current_frame();
                 let p = f.offset(p);
-                buf.draw_to(f.data(), p);
+                buf.draw_bmp(f.data(), p);
             }
         }
     }

@@ -23,8 +23,8 @@ impl Object {
 #[derive(Debug, PartialEq)]
 pub struct Actor {
     image: Image,
-    location: Point,
-    destination: Option<Point>,
+    pub location: Point,
+    pub destination: Option<Point>,
     movement_speed: Option<f64>,
 }
 impl Actor {
@@ -90,7 +90,7 @@ impl Scenery {
     pub fn draw(&self, buffer: &mut Buffer) {
         if let Image::Static(i) = &self.image {
             let b = i.data();
-            buffer.draw_slice(b.data());
+            buffer.draw_raw_slice(b.data());
         }
     }
 }

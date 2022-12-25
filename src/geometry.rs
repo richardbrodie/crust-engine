@@ -2,10 +2,6 @@ use std::ops::{Add, AddAssign, Mul, Sub};
 
 use winit::dpi::{PhysicalPosition, PhysicalSize};
 
-// x,y or w,h
-// #[derive(Default, Debug, PartialEq, Clone, Copy)]
-// pub struct Vec2<T>(pub T, pub T);
-
 #[derive(Default, Debug, PartialEq, Clone, Copy)]
 pub struct Point {
     pub x: f64,

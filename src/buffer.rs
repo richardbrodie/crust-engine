@@ -3,8 +3,11 @@ use std::cmp;
 use crate::error::Error;
 use crate::geometry::{Point, Rect};
 use crate::image::Bitmap;
+use crate::lines::line;
 use pixels::{Pixels, SurfaceTexture};
 use winit::{dpi::PhysicalSize, window::Window};
+
+const line_colour: [u8; 4] = [255, 255, 255, 255];
 
 #[derive(Debug)]
 pub struct Buffer {
@@ -18,11 +21,11 @@ impl Buffer {
         let pixels = Pixels::new(size.width as u32, size.height as u32, surface_texture).unwrap();
         Self { data: pixels, size }
     }
-    pub fn draw_slice(&mut self, data: &[u8]) {
+    pub fn draw_raw_slice(&mut self, data: &[u8]) {
         let buffer = self.data.get_frame_mut();
         buffer.copy_from_slice(data)
     }
-    pub fn draw_to(&mut self, bmp: &Bitmap, pos: Point) {
+    pub fn draw_bmp(&mut self, bmp: &Bitmap, pos: Point) {
         let buffer = self.data.get_frame_mut();
 
         // clipping
@@ -52,6 +55,14 @@ impl Buffer {
             .window_pos_to_pixel(pos.into())
             .ok()
             .map(|p| p.into())
+    }
+    pub fn draw_line(&mut self, p0: Point, p1: Point) {
+        let buffer = self.data.get_frame_mut();
+        let points = line(p0, p1);
+        for p in points {
+            let pidx = p.y as usize * (self.size.width * 4) + (p.x as usize * 4);
+            buffer[pidx..pidx + 4].copy_from_slice(&line_colour);
+        }
     }
 }
 #[inline(always)]

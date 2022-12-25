@@ -1,10 +1,8 @@
 use buffer::Buffer;
 use game_state::GameState;
 
-use tracing::{error, metadata::LevelFilter};
-use tracing_subscriber::{
-    fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
-};
+use geometry::Point;
+use tracing::error;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -20,14 +18,6 @@ mod image;
 mod lines;
 
 fn main() {
-    // let default_filter = EnvFilter::from_default_env().add_directive(LevelFilter::INFO.into());
-    // // let wgpu_filter = fmt::layer().with_filter(EnvFilter::new("wgpu_core::device=error"));
-    // let self_filter = fmt::layer().with_filter(EnvFilter::new("adventure_game_engine=info"));
-    // tracing_subscriber::registry()
-    //     // .with(wgpu_filter)
-    //     .with(default_filter)
-    //     .with(self_filter)
-    //     .init();
     tracing_subscriber::fmt().init();
 
     let event_loop = EventLoop::new();
@@ -43,6 +33,9 @@ fn main() {
     };
     let mut buffer = Buffer::new(&window);
     let mut game_state = GameState::new();
+
+    let p0 = Point::new(148.0, 3.0);
+    let p1 = Point::new(14.0, 28.0);
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_poll();
