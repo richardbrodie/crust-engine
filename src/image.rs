@@ -144,6 +144,12 @@ impl Image {
             }
         }
     }
+    pub fn size(&self) -> Rect {
+        match self {
+            Self::Static(i) => i.data.size,
+            Self::Animated(i) => i.size,
+        }
+    }
 }
 
 #[cfg(test)]

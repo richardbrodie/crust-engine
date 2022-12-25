@@ -8,6 +8,7 @@ use pixels::{Pixels, SurfaceTexture};
 use winit::{dpi::PhysicalSize, window::Window};
 
 const line_colour: [u8; 4] = [255, 255, 255, 255];
+const point_colour: [u8; 4] = [155, 255, 055, 255];
 
 #[derive(Debug)]
 pub struct Buffer {
@@ -62,6 +63,15 @@ impl Buffer {
         for p in points {
             let pidx = p.y as usize * (self.size.width * 4) + (p.x as usize * 4);
             buffer[pidx..pidx + 4].copy_from_slice(&line_colour);
+        }
+    }
+    pub fn draw_point(&mut self, p: Point) {
+        let buffer = self.data.get_frame_mut();
+        for x in cmp::max(p.x as usize, 2) - 2..p.x as usize + 2 {
+            for y in cmp::max(p.y as usize, 2) - 2..p.y as usize + 1 {
+                let pidx = y * (self.size.width * 4) + x * 4;
+                buffer[pidx..pidx + 4].copy_from_slice(&point_colour);
+            }
         }
     }
 }

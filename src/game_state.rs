@@ -9,7 +9,7 @@ use crate::{
     geometry::Point,
 };
 
-pub const TICK: Duration = Duration::from_millis(1000 / 60);
+pub const TICK: Duration = Duration::from_millis(1000 / 90);
 
 struct WalkLine {
     start: Point,
@@ -31,8 +31,8 @@ impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
         let ball_image = "resources/ball.png";
-        let character = Actor::new(character_image, Point::new(10.0, 10.0), Some(0.1));
-        let actors = vec![Actor::new(ball_image, Point::new(50.0, 50.0), None)];
+        let character = Actor::new(character_image, Point::new(50.0, 50.0), Some(0.07));
+        let actors = vec![Actor::new(ball_image, Point::new(150.0, 150.0), None)];
         let scenery = Scenery::new();
 
         Self {
@@ -71,6 +71,8 @@ impl GameState {
 
             self.scenery.draw(buffer);
             buffer.draw_line(ls, le);
+            buffer.draw_point(ls);
+            buffer.draw_point(le);
 
             self.character.mouse_over(self.mouse_location);
             if self.mouse_click {
