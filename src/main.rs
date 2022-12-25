@@ -1,7 +1,7 @@
 use buffer::Buffer;
 use game_state::GameState;
 
-use geometry::Point;
+use geometry::point;
 use tracing::error;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
@@ -15,7 +15,6 @@ mod error;
 mod game_state;
 mod geometry;
 mod image;
-mod lines;
 
 fn main() {
     tracing_subscriber::fmt().init();
@@ -34,8 +33,8 @@ fn main() {
     let mut buffer = Buffer::new(&window);
     let mut game_state = GameState::new();
 
-    let p0 = Point::new(148.0, 3.0);
-    let p1 = Point::new(14.0, 28.0);
+    let p0 = point(148.0, 3.0);
+    let p1 = point(14.0, 28.0);
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_poll();

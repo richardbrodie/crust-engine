@@ -7,7 +7,7 @@ pub enum Error {
 }
 
 impl From<TextureError> for Error {
-    fn from(value: TextureError) -> Self {
+    fn from(_: TextureError) -> Self {
         Self::ResizeError
     }
 }

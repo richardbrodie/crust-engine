@@ -6,15 +6,10 @@ use winit::event::ElementState;
 use crate::{
     buffer::Buffer,
     components::{Actor, Object, Scenery, Updatable},
-    geometry::Point,
+    geometry::{line, point, Line, Point},
 };
 
 pub const TICK: Duration = Duration::from_millis(1000 / 90);
-
-struct WalkLine {
-    start: Point,
-    end: Point,
-}
 
 pub struct GameState {
     pub exit_requested: bool,
@@ -25,14 +20,14 @@ pub struct GameState {
     actors: Vec<Actor>,
     objects: Vec<Object>,
     scenery: Scenery,
-    walkline: Option<WalkLine>,
+    walkline: Option<Line>,
 }
 impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
         let ball_image = "resources/ball.png";
-        let character = Actor::new(character_image, Point::new(50.0, 50.0), Some(0.07));
-        let actors = vec![Actor::new(ball_image, Point::new(150.0, 150.0), None)];
+        let character = Actor::new(character_image, point(50.0, 50.0), Some(0.07));
+        let actors = vec![Actor::new(ball_image, point(150.0, 150.0), None)];
         let scenery = Scenery::new();
 
         Self {
@@ -42,7 +37,7 @@ impl GameState {
             actors,
             objects: vec![],
             scenery,
-            mouse_location: Point::new(0.0, 0.0),
+            mouse_location: point(0.0, 0.0),
             mouse_click: false,
             walkline: None,
         }
@@ -52,28 +47,27 @@ impl GameState {
     }
     pub fn mouse_click(&mut self, state: ElementState) {
         if state == ElementState::Pressed {
-            info!("click");
-            self.walkline = Some(WalkLine {
-                start: self.character.location,
-                end: self.mouse_location,
-            });
+            self.walkline = Some(line(self.character.location, self.mouse_location));
             self.mouse_click = true;
         }
     }
     pub fn tick(&mut self, buffer: &mut Buffer) -> bool {
         let delta = self.previous_time.elapsed();
         if delta >= TICK {
-            let (ls, le) = match &self.walkline {
-                Some(wl) => (wl.start, wl.end),
-                None => (self.character.location, self.mouse_location),
-            };
             self.previous_time = Instant::now();
 
             self.scenery.draw(buffer);
-            buffer.draw_line(ls, le);
-            buffer.draw_point(ls);
-            buffer.draw_point(le);
 
+            {
+                let l = if self.walkline.is_none() {
+                    line(self.character.location, self.mouse_location)
+                } else {
+                    self.walkline.unwrap()
+                };
+                buffer.draw_line(&l);
+                buffer.draw_point(l.start);
+                buffer.draw_point(l.end);
+            }
             self.character.mouse_over(self.mouse_location);
             if self.mouse_click {
                 self.mouse_click = false;

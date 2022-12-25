@@ -1,9 +1,8 @@
 use std::cmp;
 
-use crate::error::Error;
-use crate::geometry::{Point, Rect};
+use crate::geometry::{Line, Point, Rect};
 use crate::image::Bitmap;
-use crate::lines::line;
+use crate::{error::Error, geometry::rect};
 use pixels::{Pixels, SurfaceTexture};
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -17,10 +16,13 @@ pub struct Buffer {
 }
 impl Buffer {
     pub fn new(window: &Window) -> Self {
-        let size = Rect::new(640, 465);
-        let surface_texture = SurfaceTexture::new(size.width as u32, size.height as u32, &window);
-        let pixels = Pixels::new(size.width as u32, size.height as u32, surface_texture).unwrap();
-        Self { data: pixels, size }
+        let (w, h) = (640, 465);
+        let surface_texture = SurfaceTexture::new(w, h, &window);
+        let pixels = Pixels::new(w, h, surface_texture).unwrap();
+        Self {
+            data: pixels,
+            size: rect(w as f64, h as f64),
+        }
     }
     pub fn draw_raw_slice(&mut self, data: &[u8]) {
         let buffer = self.data.get_frame_mut();
@@ -30,12 +32,14 @@ impl Buffer {
         let buffer = self.data.get_frame_mut();
 
         // clipping
-        let rows = cmp::min(bmp.rows(), self.size.height - pos.y as usize);
-        let cols = cmp::min(bmp.cols(), self.size.width - pos.x as usize);
+        let (size_w, size_h) = self.size.wh();
+        let (pos_x, pos_y) = pos.xy();
+        let rows = cmp::min(bmp.rows(), size_h - pos_y);
+        let cols = cmp::min(bmp.cols(), size_w - pos_x);
 
         // draw
         for rownum in 0..rows {
-            let lstart = (pos.y as usize + rownum) * (self.size.width * 4) + (pos.x as usize * 4);
+            let lstart = (pos_y + rownum) * (size_w * 4) + (pos_x * 4);
             for (i, pixel) in bmp.row_partial(rownum, cols).chunks_exact(4).enumerate() {
                 let idx = lstart + (i * 4);
                 let base = &mut buffer[idx..idx + 4];
@@ -57,19 +61,21 @@ impl Buffer {
             .ok()
             .map(|p| p.into())
     }
-    pub fn draw_line(&mut self, p0: Point, p1: Point) {
+    pub fn draw_line(&mut self, l: &Line) {
         let buffer = self.data.get_frame_mut();
-        let points = line(p0, p1);
+        let points = l.points();
         for p in points {
-            let pidx = p.y as usize * (self.size.width * 4) + (p.x as usize * 4);
+            let (px, py) = p.xy();
+            let pidx = py * (self.size.wh().0 * 4) + (px * 4);
             buffer[pidx..pidx + 4].copy_from_slice(&line_colour);
         }
     }
     pub fn draw_point(&mut self, p: Point) {
         let buffer = self.data.get_frame_mut();
-        for x in cmp::max(p.x as usize, 2) - 2..p.x as usize + 2 {
-            for y in cmp::max(p.y as usize, 2) - 2..p.y as usize + 1 {
-                let pidx = y * (self.size.width * 4) + x * 4;
+        let (px, py) = p.xy();
+        for x in cmp::max(px, 2) - 2..px + 2 {
+            for y in cmp::max(py, 2) - 2..py + 1 {
+                let pidx = y * (self.size.wh().0 * 4) + x * 4;
                 buffer[pidx..pidx + 4].copy_from_slice(&point_colour);
             }
         }
