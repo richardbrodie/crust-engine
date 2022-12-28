@@ -1,16 +1,16 @@
 use std::time::{Duration, Instant};
 
-use tracing::info;
 use winit::event::ElementState;
 
 use crate::{
     buffer::Buffer,
     components::{Actor, Object, Scenery, Updatable},
-    geometry::{line, point, Line, Point},
+    geometry::{line, point, Line, LineString, Point, Polygon},
 };
 
 pub const TICK: Duration = Duration::from_millis(1000 / 90);
 
+#[derive(Debug)]
 pub struct GameState {
     pub exit_requested: bool,
     previous_time: Instant,
@@ -21,14 +21,22 @@ pub struct GameState {
     objects: Vec<Object>,
     scenery: Scenery,
     walkline: Option<Line>,
+    walkbox: Polygon,
 }
 impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
         let ball_image = "resources/ball.png";
-        let character = Actor::new(character_image, point(50.0, 50.0), Some(0.07));
-        let actors = vec![Actor::new(ball_image, point(150.0, 150.0), None)];
+        let character = Actor::new(character_image, point(150.0, 150.0), Some(0.07));
+        let actors = vec![Actor::new(ball_image, point(350.0, 350.0), None)];
         let scenery = Scenery::new();
+        let walkbox = Polygon::new(LineString::new(vec![
+            point(60.0, 60.0),
+            point(610.0, 60.0),
+            point(610.0, 435.0),
+            point(60.0, 435.0),
+            point(60.0, 60.0),
+        ]));
 
         Self {
             exit_requested: false,
@@ -40,9 +48,18 @@ impl GameState {
             mouse_location: point(0.0, 0.0),
             mouse_click: false,
             walkline: None,
+            walkbox,
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
+        let cp = line(self.character.location, loc);
+        for l in self.walkbox.exterior.lines() {
+            if cp.intersects(&l) {
+                let p = l.closest_point(loc);
+                self.mouse_location = p;
+                return;
+            }
+        }
         self.mouse_location = loc;
     }
     pub fn mouse_click(&mut self, state: ElementState) {
@@ -64,9 +81,12 @@ impl GameState {
                 } else {
                     self.walkline.unwrap()
                 };
-                buffer.draw_line(&l);
+                buffer.draw_line(&l, crate::geometry::LineType::Path);
                 buffer.draw_point(l.start);
                 buffer.draw_point(l.end);
+                for l in self.walkbox.exterior.lines() {
+                    buffer.draw_line(&l, crate::geometry::LineType::Box);
+                }
             }
             self.character.mouse_over(self.mouse_location);
             if self.mouse_click {
@@ -93,4 +113,5 @@ impl GameState {
         }
         delta >= TICK
     }
+    // fn calculate_path(&self) -> Line {}
 }

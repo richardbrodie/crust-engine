@@ -1,7 +1,6 @@
 use buffer::Buffer;
 use game_state::GameState;
 
-use geometry::point;
 use tracing::error;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
@@ -17,7 +16,7 @@ mod geometry;
 mod image;
 
 fn main() {
-    tracing_subscriber::fmt().init();
+    // tracing_subscriber::fmt().init();
 
     let event_loop = EventLoop::new();
     let monitor = event_loop
@@ -33,16 +32,13 @@ fn main() {
     let mut buffer = Buffer::new(&window);
     let mut game_state = GameState::new();
 
-    let p0 = point(148.0, 3.0);
-    let p1 = point(14.0, 28.0);
-
     event_loop.run(move |event, _, control_flow| {
-        control_flow.set_poll();
+        control_flow.set_wait();
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::Resized(size) => {
                     if let Err(err) = buffer.resize(size) {
-                        error!("pixels.resize_surface() failed: {err}");
+                        error!("pixels.resize_surface() failed: {:?}", err);
                         *control_flow = ControlFlow::Exit;
                         return;
                     }
@@ -69,7 +65,7 @@ fn main() {
                 _ => {}
             },
             Event::RedrawRequested(_) => buffer.render(),
-            _ => {
+            Event::MainEventsCleared => {
                 if game_state.exit_requested {
                     *control_flow = ControlFlow::Exit;
                     return;
@@ -77,6 +73,7 @@ fn main() {
                 game_state.tick(&mut buffer);
                 window.request_redraw();
             }
+            _ => {}
         }
     })
 }

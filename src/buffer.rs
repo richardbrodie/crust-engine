@@ -1,13 +1,12 @@
 use std::cmp;
 
-use crate::geometry::{Line, Point, Rect};
+use crate::geometry::{Line, LineType, Point, Rect};
 use crate::image::Bitmap;
 use crate::{error::Error, geometry::rect};
 use pixels::{Pixels, SurfaceTexture};
 use winit::{dpi::PhysicalSize, window::Window};
 
-const line_colour: [u8; 4] = [255, 255, 255, 255];
-const point_colour: [u8; 4] = [155, 255, 055, 255];
+const POINT_COLOUR: [u8; 4] = [155, 255, 055, 255];
 
 #[derive(Debug)]
 pub struct Buffer {
@@ -61,13 +60,13 @@ impl Buffer {
             .ok()
             .map(|p| p.into())
     }
-    pub fn draw_line(&mut self, l: &Line) {
+    pub fn draw_line(&mut self, l: &Line, t: LineType) {
         let buffer = self.data.get_frame_mut();
         let points = l.points();
         for p in points {
             let (px, py) = p.xy();
             let pidx = py * (self.size.wh().0 * 4) + (px * 4);
-            buffer[pidx..pidx + 4].copy_from_slice(&line_colour);
+            buffer[pidx..pidx + 4].copy_from_slice(t.colour());
         }
     }
     pub fn draw_point(&mut self, p: Point) {
@@ -76,7 +75,7 @@ impl Buffer {
         for x in cmp::max(px, 2) - 2..px + 2 {
             for y in cmp::max(py, 2) - 2..py + 1 {
                 let pidx = y * (self.size.wh().0 * 4) + x * 4;
-                buffer[pidx..pidx + 4].copy_from_slice(&point_colour);
+                buffer[pidx..pidx + 4].copy_from_slice(&POINT_COLOUR);
             }
         }
     }

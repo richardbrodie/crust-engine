@@ -1,8 +1,7 @@
 use pixels::TextureError;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(Debug)]
 pub enum Error {
-    #[error("resizing texture")]
     ResizeError,
 }
 
