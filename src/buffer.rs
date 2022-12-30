@@ -20,7 +20,7 @@ impl Buffer {
         let pixels = Pixels::new(w, h, surface_texture).unwrap();
         Self {
             data: pixels,
-            size: rect(w as f64, h as f64),
+            size: rect(w as usize, h as usize),
         }
     }
     pub fn draw_raw_slice(&mut self, data: &[u8]) {

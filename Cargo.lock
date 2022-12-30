@@ -12,6 +12,7 @@ checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 name = "adventure_game_engine"
 version = "0.1.0"
 dependencies = [
+ "bdf",
  "pixels",
  "png",
  "tracing",
@@ -58,6 +59,25 @@ name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
+
+[[package]]
+name = "bdf"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f550a6818e6f42ccd5883f44e45fff4f68415a0d09abdc81e7d1d78e0780af14"
+dependencies = [
+ "bit-set 0.3.0",
+ "thiserror",
+]
+
+[[package]]
+name = "bit-set"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84527c7b0452f22545cc010e72d366a435561d2b28b978035550b3778c4d428d"
+dependencies = [
+ "bit-vec",
+]
 
 [[package]]
 name = "bit-set"
@@ -579,7 +599,7 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "262d2840e72dbe250e8cf2f522d080988dfca624c4112c096238a4845f591707"
 dependencies = [
- "bit-set",
+ "bit-set 0.5.3",
  "bitflags",
  "codespan-reporting",
  "hexf-parse",
@@ -1300,7 +1320,7 @@ dependencies = [
  "android_system_properties",
  "arrayvec",
  "ash",
- "bit-set",
+ "bit-set 0.5.3",
  "bitflags",
  "block",
  "core-graphics-types",

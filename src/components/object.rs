@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{path::Path, time::Duration};
 
 use crate::{buffer::Buffer, geometry::Point, image::Image};
 
@@ -10,6 +10,13 @@ pub struct Object {
     location: Point,
 }
 impl Object {
+    pub fn new<T: AsRef<Path>>(path: T, loc: Point) -> Self {
+        let image = Image::load(path);
+        Self {
+            image,
+            location: loc,
+        }
+    }
     pub fn draw(&self, buf: &mut Buffer) {
         self.image.draw(buf, self.location);
     }

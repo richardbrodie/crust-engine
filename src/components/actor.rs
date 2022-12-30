@@ -29,7 +29,7 @@ impl Actor {
     }
     pub fn draw(&self, buf: &mut Buffer) {
         let s = self.image.size();
-        let offset_location = self.location - point(s.w / 2.0, s.h);
+        let offset_location = self.location - point(s.w as f64 / 2.0, s.h as f64);
         self.image.draw(buf, offset_location);
     }
     pub fn set_destination(&mut self, dest: Point) {

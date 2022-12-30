@@ -12,7 +12,7 @@ pub struct Bitmap {
     size: Rect,
 }
 impl Bitmap {
-    fn new(buf: Vec<u8>, size: Rect) -> Self {
+    pub fn new(buf: Vec<u8>, size: Rect) -> Self {
         Self { data: buf, size }
     }
     pub fn cols(&self) -> usize {
@@ -24,9 +24,6 @@ impl Bitmap {
         h
     }
 
-    pub fn row(&self, rownum: usize) -> &[u8] {
-        self.row_partial(rownum, self.cols())
-    }
     pub fn row_partial(&self, rownum: usize, len: usize) -> &[u8] {
         let full_row = self.cols() * 4;
         let a = rownum * full_row;
@@ -51,7 +48,7 @@ impl Frame {
         buf.truncate(frame.buffer_size());
         let fc = &reader.info().frame_control().unwrap();
         let interval = Duration::from_secs_f64(fc.delay_num as f64 / fc.delay_den as f64);
-        let size = rect(fc.width as f64, fc.height as f64);
+        let size = rect(fc.width as usize, fc.height as usize);
         Frame {
             data: Bitmap::new(buf, size),
             offset: point(fc.x_offset as f64, fc.y_offset as f64),
@@ -123,7 +120,7 @@ impl Image {
         let decoder = png::Decoder::new(image_file);
         let mut reader = decoder.read_info().unwrap();
         let img_info = reader.info();
-        let size = rect(img_info.width as f64, img_info.height as f64);
+        let size = rect(img_info.width as usize, img_info.height as usize);
         if reader.info().is_animated() {
             let frames: Vec<_> = (0..img_info.animation_control().unwrap().num_frames)
                 .map(|_| Frame::new(&mut reader))

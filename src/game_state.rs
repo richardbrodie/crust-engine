@@ -6,6 +6,7 @@ use crate::{
     buffer::Buffer,
     components::{Actor, Object, Scenery, Updatable},
     geometry::{line, point, Line, LineString, Point, Polygon},
+    text::GlyphWriter,
 };
 
 pub const TICK: Duration = Duration::from_millis(1000 / 90);
@@ -22,13 +23,14 @@ pub struct GameState {
     scenery: Scenery,
     walkline: Option<Line>,
     walkbox: Polygon,
+    text_writer: GlyphWriter,
 }
 impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
         let ball_image = "resources/ball.png";
         let character = Actor::new(character_image, point(150.0, 150.0), Some(0.07));
-        let actors = vec![Actor::new(ball_image, point(350.0, 350.0), None)];
+        // let objects = vec![Object::new(ball_image, point(350.0, 350.0))];
         let scenery = Scenery::new();
         let walkbox = Polygon::new(LineString::new(vec![
             point(60.0, 60.0),
@@ -37,17 +39,21 @@ impl GameState {
             point(60.0, 435.0),
             point(60.0, 60.0),
         ]));
+        let text_writer = GlyphWriter::new();
+        // font.draw_codepoint('c');
+        // font.draw_codepoint('d');
 
         Self {
             exit_requested: false,
             previous_time: Instant::now(),
             character,
-            actors,
+            actors: vec![],
             objects: vec![],
             scenery,
             mouse_location: point(0.0, 0.0),
             mouse_click: false,
             walkline: None,
+            text_writer,
             walkbox,
         }
     }
@@ -110,6 +116,10 @@ impl GameState {
             if self.character.destination.is_none() {
                 self.walkline = None;
             }
+
+            let bmp = self.text_writer.make_codepoint('z');
+            let p = point(256.0, 256.0);
+            // buffer.draw_bmp(&bmp, p);
         }
         delta >= TICK
     }

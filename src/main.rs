@@ -14,6 +14,7 @@ mod error;
 mod game_state;
 mod geometry;
 mod image;
+mod text;
 
 fn main() {
     // tracing_subscriber::fmt().init();
