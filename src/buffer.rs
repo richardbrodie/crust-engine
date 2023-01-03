@@ -1,6 +1,6 @@
 use std::cmp;
 
-use crate::geometry::{Line, LineType, Point, Rect};
+use crate::geometry::{LineSegment, LineType, Point, Rect};
 use crate::image::Bitmap;
 use crate::{error::Error, geometry::rect};
 use pixels::{Pixels, SurfaceTexture};
@@ -27,12 +27,13 @@ impl Buffer {
         let buffer = self.data.get_frame_mut();
         buffer.copy_from_slice(data)
     }
-    pub fn draw_bmp(&mut self, bmp: &Bitmap, pos: Point) {
+    pub fn draw_bmp<T: Into<Point>>(&mut self, bmp: &Bitmap, pos: T) {
+        let pos = pos.into();
         let buffer = self.data.get_frame_mut();
 
         // clipping
         let (size_w, size_h) = self.size.wh();
-        let (pos_x, pos_y) = pos.xy();
+        let (pos_x, pos_y) = (pos.x as usize, pos.y as usize);
         let rows = cmp::min(bmp.rows(), size_h - pos_y);
         let cols = cmp::min(bmp.cols(), size_w - pos_x);
 
@@ -60,7 +61,7 @@ impl Buffer {
             .ok()
             .map(|p| p.into())
     }
-    pub fn draw_line(&mut self, l: &Line, t: LineType) {
+    pub fn draw_line(&mut self, l: &LineSegment, t: LineType) {
         let buffer = self.data.get_frame_mut();
         let points = l.points();
         for p in points {

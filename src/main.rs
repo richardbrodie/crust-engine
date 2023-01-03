@@ -9,8 +9,9 @@ use winit::{
 };
 
 mod buffer;
-mod components;
+// mod components;
 mod error;
+mod game;
 mod game_state;
 mod geometry;
 mod image;

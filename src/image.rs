@@ -1,7 +1,7 @@
 use std::{fs::File, path::Path, time::Duration};
 
 use crate::{
-    geometry::{point, rect, Point, Rect},
+    geometry::{point, rect, Point, Rect, Vector},
     Buffer,
 };
 
@@ -55,7 +55,7 @@ impl Frame {
             interval,
         }
     }
-    pub fn offset(&self, p: Point) -> Point {
+    pub fn offset(&self, p: Point) -> Vector {
         p + self.offset
     }
     pub fn data(&self) -> &Bitmap {

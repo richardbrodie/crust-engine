@@ -4,8 +4,8 @@ use winit::event::ElementState;
 
 use crate::{
     buffer::Buffer,
-    components::{Actor, Object, Scenery, Updatable},
-    geometry::{line, point, Line, LineString, Point, Polygon},
+    game::{Actor, Object, Scenery, Updatable},
+    geometry::{line, point, LineSegment, LineString, Point, Polygon},
     text::GlyphWriter,
 };
 
@@ -21,7 +21,7 @@ pub struct GameState {
     actors: Vec<Actor>,
     objects: Vec<Object>,
     scenery: Scenery,
-    walkline: Option<Line>,
+    walkline: Option<LineSegment>,
     walkbox: Polygon,
     text_writer: GlyphWriter,
 }
@@ -88,8 +88,8 @@ impl GameState {
                     self.walkline.unwrap()
                 };
                 buffer.draw_line(&l, crate::geometry::LineType::Path);
-                buffer.draw_point(l.start);
-                buffer.draw_point(l.end);
+                buffer.draw_point(l.0);
+                buffer.draw_point(l.1);
                 for l in self.walkbox.exterior.lines() {
                     buffer.draw_line(&l, crate::geometry::LineType::Box);
                 }

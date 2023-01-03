@@ -17,9 +17,6 @@ impl Object {
             location: loc,
         }
     }
-    pub fn draw(&self, buf: &mut Buffer) {
-        self.image.draw(buf, self.location);
-    }
 }
 impl Updatable for Object {
     fn mouse_over(&mut self, _p: Point) {
@@ -32,5 +29,8 @@ impl Updatable for Object {
         if let Image::Animated(img) = &mut self.image {
             img.update(dt);
         }
+    }
+    fn draw(&self, buf: &mut Buffer) {
+        self.image.draw(buf, self.location);
     }
 }

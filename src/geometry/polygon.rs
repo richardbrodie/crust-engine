@@ -1,4 +1,4 @@
-use super::lines::LineString;
+use super::line::LineString;
 
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct Polygon {
