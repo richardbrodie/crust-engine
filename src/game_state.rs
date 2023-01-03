@@ -5,7 +5,7 @@ use winit::event::ElementState;
 use crate::{
     buffer::Buffer,
     game::{Actor, Object, Scenery, Updatable},
-    geometry::{line, point, LineSegment, LineString, Point, Polygon},
+    geometry::{line, lineseg, point, LineSegment, LineString, Point, Polygon},
     text::GlyphWriter,
 };
 
@@ -58,7 +58,7 @@ impl GameState {
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
-        let cp = line(self.character.location, loc);
+        let cp = lineseg(self.character.location, loc);
         for l in self.walkbox.exterior.lines() {
             if cp.intersects(&l) {
                 let p = l.closest_point(loc);
@@ -70,7 +70,7 @@ impl GameState {
     }
     pub fn mouse_click(&mut self, state: ElementState) {
         if state == ElementState::Pressed {
-            self.walkline = Some(line(self.character.location, self.mouse_location));
+            self.walkline = Some(lineseg(self.character.location, self.mouse_location));
             self.mouse_click = true;
         }
     }
@@ -83,13 +83,13 @@ impl GameState {
 
             {
                 let l = if self.walkline.is_none() {
-                    line(self.character.location, self.mouse_location)
+                    lineseg(self.character.location, self.mouse_location)
                 } else {
                     self.walkline.unwrap()
                 };
                 buffer.draw_line(&l, crate::geometry::LineType::Path);
-                buffer.draw_point(l.0);
-                buffer.draw_point(l.1);
+                buffer.draw_point(l.start);
+                buffer.draw_point(l.end);
                 for l in self.walkbox.exterior.lines() {
                     buffer.draw_line(&l, crate::geometry::LineType::Box);
                 }
