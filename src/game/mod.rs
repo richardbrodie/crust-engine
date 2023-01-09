@@ -1,10 +1,13 @@
 mod actor;
 mod object;
+mod pathfinding;
 mod scenery;
+mod walkbox;
 
 pub use actor::Actor;
 pub use object::Object;
 pub use scenery::Scenery;
+pub use walkbox::WalkBox;
 
 use std::time::Duration;
 

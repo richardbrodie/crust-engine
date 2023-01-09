@@ -4,8 +4,8 @@ use winit::event::ElementState;
 
 use crate::{
     buffer::Buffer,
-    game::{Actor, Object, Scenery, Updatable},
-    geometry::{line, lineseg, point, LineSegment, LineString, Point, Polygon},
+    game::{Actor, Object, Scenery, Updatable, WalkBox},
+    geometry::{point, Graph, LineType, Point, Polygon},
     text::GlyphWriter,
 };
 
@@ -21,9 +21,9 @@ pub struct GameState {
     actors: Vec<Actor>,
     objects: Vec<Object>,
     scenery: Scenery,
-    walkline: Option<LineSegment>,
-    walkbox: Polygon,
+    walkbox: WalkBox,
     text_writer: GlyphWriter,
+    graph: Graph,
 }
 impl GameState {
     pub fn new() -> Self {
@@ -32,16 +32,28 @@ impl GameState {
         let character = Actor::new(character_image, point(150.0, 150.0), Some(0.07));
         // let objects = vec![Object::new(ball_image, point(350.0, 350.0))];
         let scenery = Scenery::new();
-        let walkbox = Polygon::new(LineString::new(vec![
-            point(60.0, 60.0),
-            point(610.0, 60.0),
-            point(610.0, 435.0),
-            point(60.0, 435.0),
-            point(60.0, 60.0),
-        ]));
+        let walkbox = WalkBox::new(
+            Polygon::new(vec![
+                point(60.0, 60.0),
+                point(300.0, 60.0),
+                point(300.0, 240.0),
+                point(360.0, 240.0),
+                point(360.0, 60.0),
+                point(610.0, 60.0),
+                point(610.0, 260.0),
+                point(510.0, 260.0),
+                point(510.0, 280.0),
+                point(610.0, 280.0),
+                point(610.0, 435.0),
+                point(60.0, 435.0),
+                point(60.0, 60.0),
+            ]),
+            vec![],
+        );
         let text_writer = GlyphWriter::new();
         // font.draw_codepoint('c');
         // font.draw_codepoint('d');
+        let graph = Graph::new(walkbox.clone());
 
         Self {
             exit_requested: false,
@@ -52,25 +64,17 @@ impl GameState {
             scenery,
             mouse_location: point(0.0, 0.0),
             mouse_click: false,
-            walkline: None,
             text_writer,
             walkbox,
+            graph,
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
-        let cp = lineseg(self.character.location, loc);
-        for l in self.walkbox.exterior.lines() {
-            if cp.intersects(&l) {
-                let p = l.closest_point(loc);
-                self.mouse_location = p;
-                return;
-            }
-        }
+        self.graph.add_temporary_edges(self.character.location, loc);
         self.mouse_location = loc;
     }
     pub fn mouse_click(&mut self, state: ElementState) {
         if state == ElementState::Pressed {
-            self.walkline = Some(lineseg(self.character.location, self.mouse_location));
             self.mouse_click = true;
         }
     }
@@ -81,19 +85,13 @@ impl GameState {
 
             self.scenery.draw(buffer);
 
-            {
-                let l = if self.walkline.is_none() {
-                    lineseg(self.character.location, self.mouse_location)
-                } else {
-                    self.walkline.unwrap()
-                };
-                buffer.draw_line(&l, crate::geometry::LineType::Path);
-                buffer.draw_point(l.start);
-                buffer.draw_point(l.end);
-                for l in self.walkbox.exterior.lines() {
-                    buffer.draw_line(&l, crate::geometry::LineType::Box);
-                }
+            for l in self.walkbox.exterior.edges() {
+                buffer.draw_line(&l, crate::geometry::LineType::Box);
             }
+            for l in self.graph.walkable_edges() {
+                buffer.draw_line(l, LineType::Path);
+            }
+
             self.character.mouse_over(self.mouse_location);
             if self.mouse_click {
                 self.mouse_click = false;
@@ -113,9 +111,6 @@ impl GameState {
                 s.tick(delta);
                 s.draw(buffer);
             });
-            if self.character.destination.is_none() {
-                self.walkline = None;
-            }
 
             let bmp = self.text_writer.make_codepoint('z');
             let p = point(256.0, 256.0);

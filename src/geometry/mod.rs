@@ -5,7 +5,8 @@ mod polygon;
 mod rect;
 mod vector;
 
-pub use line::{line, lineseg, Line, LineSegment, LineString, LineType};
+pub use graph::Graph;
+pub use line::{line, line_segment, Line, LineSegment, LineType};
 pub use point::{point, Point};
 pub use polygon::Polygon;
 pub use rect::{rect, Rect};

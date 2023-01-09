@@ -4,7 +4,7 @@ use winit::dpi::PhysicalPosition;
 
 use super::Vector;
 
-#[derive(Default, Debug, PartialEq, Clone, Copy)]
+#[derive(Default, Debug, PartialEq, Clone, Copy, PartialOrd)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -12,6 +12,11 @@ pub struct Point {
 impl Point {
     pub fn xy(&self) -> (usize, usize) {
         (self.x as usize, self.y as usize)
+    }
+    pub fn is_convex(p: Self, c: Self, n: Self) -> bool {
+        let left = c - p;
+        let right = n - c;
+        left.cross(right) < 0.0
     }
 }
 pub fn point(x: f64, y: f64) -> Point {
