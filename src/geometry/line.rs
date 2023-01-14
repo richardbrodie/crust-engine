@@ -1,14 +1,12 @@
-use std::cmp::Ordering;
-
 use crate::geometry::{point, Point};
 
 use super::Vector;
 
-const PATH_COLOUR: [u8; 4] = [255, 255, 255, 255];
+const GRAPH_COLOUR: [u8; 4] = [255, 255, 255, 255];
 const BOX_COLOUR: [u8; 4] = [10, 10, 240, 255];
-const GRAPH_COLOUR: [u8; 4] = [10, 240, 10, 255];
+const PATH_COLOUR: [u8; 4] = [10, 240, 10, 255];
 
-#[derive(Default, Debug, PartialEq, Clone, Copy)]
+#[derive(Default, Debug, PartialEq, Clone, Copy, PartialOrd)]
 pub struct Line {
     pub a: f64,
     pub b: f64,
@@ -38,7 +36,6 @@ pub struct LineSegment {
     pub start: Point,
     pub end: Point,
 }
-impl Eq for LineSegment {}
 impl LineSegment {
     pub fn points(&self) -> Vec<Point> {
         let mut points: Vec<Point> = vec![];
@@ -137,15 +134,7 @@ impl LineSegment {
         (self.end - self.start).length()
     }
 }
-impl Ord for LineSegment {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .length()
-            .partial_cmp(&self.length())
-            .unwrap()
-            .then_with(|| self.start.partial_cmp(&other.start).unwrap())
-    }
-}
+
 pub fn line_segment(start: Point, end: Point) -> LineSegment {
     LineSegment { start, end }
 }

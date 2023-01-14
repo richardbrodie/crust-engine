@@ -87,14 +87,23 @@ impl GameState {
                 buffer.draw_line(&l, crate::geometry::LineType::Box);
             }
             for l in self.graph.walkable_edges() {
-                buffer.draw_line(l, LineType::Path);
+                buffer.draw_line(l, LineType::Graph);
+            }
+
+            if let Some(path) = self
+                .graph
+                .path_to(self.character.location, self.mouse_location)
+            {
+                for l in path.lines() {
+                    buffer.draw_line(&l, LineType::Path);
+                }
+                if self.mouse_click {
+                    self.mouse_click = false;
+                    self.character.set_path(path.points().map(|e| e.to_owned()));
+                }
             }
 
             self.character.mouse_over(self.mouse_location);
-            if self.mouse_click {
-                self.mouse_click = false;
-                self.character.mouse_click(self.mouse_location);
-            }
             self.character.tick(delta);
             self.character.draw(buffer);
 
@@ -110,9 +119,9 @@ impl GameState {
                 s.draw(buffer);
             });
 
-            let to = self.text_writer.make_string("hello world").to_bmp();
-            let p = point(256.0, 256.0);
-            buffer.draw_bmp(&to, p);
+            // let to = self.text_writer.make_string("hello world").to_bmp();
+            // let p = point(256.0, 256.0);
+            // buffer.draw_bmp(&to, p);
         }
         delta >= TICK
     }

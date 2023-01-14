@@ -1,4 +1,4 @@
-use crate::game::WalkBox;
+use crate::game::{astar, ShortestPath, WalkBox};
 
 use super::{line::line_segment, LineSegment, Point};
 
@@ -15,10 +15,7 @@ impl Graph {
             wb.concave_vertexes().for_each(|j| {
                 let ls = line_segment(i, j);
                 if ls.length() >= f64::EPSILON && !wb.intersects(&ls) {
-                    if !edges.iter().any(|e| {
-                        e.start == ls.start && e.end == ls.end
-                            || e.start == ls.end && e.end == ls.start
-                    }) {
+                    if !edges.iter().any(|e| e.start == ls.start && e.end == ls.end) {
                         edges.push(ls);
                     }
                 }
@@ -42,7 +39,7 @@ impl Graph {
             if let Some(l) = self.add_edge(location, end) {
                 self.temp_edges.push(l);
             }
-            if let Some(l) = self.add_edge(pointer, end) {
+            if let Some(l) = self.add_edge(end, pointer) {
                 self.temp_edges.push(l);
             }
         }
@@ -56,29 +53,82 @@ impl Graph {
             return None;
         }
         if !self.walkbox.intersects(&l) {
-            if !self.temp_edges.iter().any(|e| {
-                e.start == l.start && e.end == l.end || e.start == l.end && e.end == l.start
-            }) {
+            if !self
+                .temp_edges
+                .iter()
+                .any(|e| e.start == l.start && e.end == l.end)
+            {
                 return Some(l);
             }
         }
         return None;
     }
-    fn get_neighbours(&self, point: Point) -> impl Iterator<Item = &LineSegment> {
+    pub fn neighbours(&self, point: Point) -> impl Iterator<Item = &LineSegment> {
         self.walkable_edges
             .iter()
-            .filter(move |l| l.start == point || l.end == point)
-            .chain(
-                self.temp_edges
-                    .iter()
-                    .filter(move |l| l.start == point || l.end == point),
-            )
+            .filter(move |l| l.start == point)
+            .chain(self.temp_edges.iter().filter(move |l| l.start == point))
+    }
+    pub fn path_to(&self, start: Point, end: Point) -> Option<ShortestPath> {
+        astar(&self, start, end)
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//
-//     #[test]
-//     fn test_graph() {}
-// }
+#[cfg(test)]
+mod tests {
+    use crate::{
+        game::WalkBox,
+        geometry::{point, Polygon},
+    };
+
+    use super::Graph;
+
+    fn make_graph() -> Graph {
+        Graph::new(WalkBox::new(
+            Polygon::new(vec![
+                point(60.0, 60.0),
+                point(300.0, 60.0),
+                point(300.0, 240.0),
+                point(360.0, 240.0),
+                point(360.0, 60.0),
+                point(610.0, 60.0),
+                point(610.0, 260.0),
+                point(510.0, 260.0),
+                point(510.0, 280.0),
+                point(610.0, 280.0),
+                point(610.0, 435.0),
+                point(60.0, 435.0),
+                point(60.0, 60.0),
+            ]),
+            vec![],
+        ))
+    }
+
+    #[test]
+    fn test_walkable_edges() {
+        let graph = make_graph();
+        let mut we = graph.walkable_edges();
+        assert!(we.next().is_some());
+    }
+
+    #[test]
+    fn test_temp_edges() {
+        let mut graph = make_graph();
+        let start = point(75.0, 75.0);
+        let end = point(570.0, 80.0);
+        graph.add_temporary_edges(start, end);
+        assert_eq!(graph.temp_edges.len(), 3);
+    }
+
+    #[test]
+    fn test_neighbours() {
+        let mut graph = make_graph();
+        let start = point(75.0, 75.0);
+        let end = point(570.0, 80.0);
+        graph.add_temporary_edges(start, end);
+        let mut n = graph.neighbours(start);
+        assert!(n.next().is_some());
+        let mut n = graph.neighbours(end);
+        assert!(n.next().is_none());
+    }
+}

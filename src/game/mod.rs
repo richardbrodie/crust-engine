@@ -1,11 +1,12 @@
 mod actor;
 mod object;
-// mod pathfinding;
+mod pathfinding;
 mod scenery;
 mod walkbox;
 
 pub use actor::Actor;
 pub use object::Object;
+pub use pathfinding::{astar, ShortestPath};
 pub use scenery::Scenery;
 pub use walkbox::WalkBox;
 
@@ -23,7 +24,7 @@ pub trait Updatable {
     fn draw(&self, buf: &mut Buffer);
 }
 
-fn update_location(loc: Point, dest: Point, speed: f64, dt: Duration) -> Point {
+fn update_location(loc: Point, dest: &Point, speed: f64, dt: Duration) -> Point {
     let diff = vector(dest.x as f64 - loc.x, dest.y as f64 - loc.y);
     let hyp = (diff.x * diff.x + diff.y * diff.y).sqrt();
 
