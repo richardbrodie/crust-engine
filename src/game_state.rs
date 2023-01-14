@@ -28,7 +28,7 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
-        let ball_image = "resources/ball.png";
+        // let ball_image = "resources/ball.png";
         let character = Actor::new(character_image, point(150.0, 150.0), Some(0.07));
         // let objects = vec![Object::new(ball_image, point(350.0, 350.0))];
         let scenery = Scenery::new();
@@ -51,8 +51,6 @@ impl GameState {
             vec![],
         );
         let text_writer = GlyphWriter::new();
-        // font.draw_codepoint('c');
-        // font.draw_codepoint('d');
         let graph = Graph::new(walkbox.clone());
 
         Self {
@@ -112,9 +110,9 @@ impl GameState {
                 s.draw(buffer);
             });
 
-            let bmp = self.text_writer.make_codepoint('z');
+            let to = self.text_writer.make_string("hello world").to_bmp();
             let p = point(256.0, 256.0);
-            // buffer.draw_bmp(&bmp, p);
+            buffer.draw_bmp(&to, p);
         }
         delta >= TICK
     }

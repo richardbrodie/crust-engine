@@ -1,6 +1,6 @@
 mod actor;
 mod object;
-mod pathfinding;
+// mod pathfinding;
 mod scenery;
 mod walkbox;
 

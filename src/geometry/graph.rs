@@ -30,7 +30,7 @@ impl Graph {
             temp_edges: vec![],
         }
     }
-    pub fn walkable_edges(&mut self) -> impl Iterator<Item = &LineSegment> + '_ {
+    pub fn walkable_edges(&self) -> impl Iterator<Item = &LineSegment> + '_ {
         self.walkable_edges.iter().chain(self.temp_edges.iter())
     }
     pub fn add_temporary_edges(&mut self, location: Point, pointer: Point) {

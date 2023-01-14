@@ -1,7 +1,5 @@
 use std::{path::Path, time::Duration};
 
-use tracing::info;
-
 use crate::{
     buffer::Buffer,
     geometry::{point, Point},
@@ -36,7 +34,6 @@ impl Updatable for Actor {
         //
     }
     fn mouse_click(&mut self, p: Point) {
-        info!("setting destination");
         self.set_destination(p);
     }
     fn tick(&mut self, dt: Duration) {

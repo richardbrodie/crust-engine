@@ -100,6 +100,16 @@ impl From<(usize, usize)> for Point {
     }
 }
 
+impl Eq for Point {}
+impl Ord for Point {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.x
+            .partial_cmp(&other.x)
+            .unwrap()
+            .then_with(|| self.y.partial_cmp(&other.y).unwrap())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::geometry::{point, vector};

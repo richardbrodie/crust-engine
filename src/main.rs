@@ -1,7 +1,6 @@
 use buffer::Buffer;
 use game_state::GameState;
 
-use tracing::error;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -18,8 +17,6 @@ mod image;
 mod text;
 
 fn main() {
-    // tracing_subscriber::fmt().init();
-
     let event_loop = EventLoop::new();
     let monitor = event_loop
         .available_monitors()
@@ -39,8 +36,7 @@ fn main() {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::Resized(size) => {
-                    if let Err(err) = buffer.resize(size) {
-                        error!("pixels.resize_surface() failed: {:?}", err);
+                    if let Err(_) = buffer.resize(size) {
                         *control_flow = ControlFlow::Exit;
                         return;
                     }
