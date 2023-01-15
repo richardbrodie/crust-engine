@@ -39,15 +39,18 @@ impl Graph {
             if let Some(l) = self.add_edge(location, end) {
                 self.temp_edges.push(l);
             }
-            if let Some(l) = self.add_edge(end, pointer) {
-                self.temp_edges.push(l);
+            if self.walkbox.contains(pointer) {
+                if let Some(l) = self.add_edge(end, pointer) {
+                    self.temp_edges.push(l);
+                }
             }
         }
     }
     fn add_edge(&self, start: Point, end: Point) -> Option<LineSegment> {
-        if !self.walkbox.exterior.contains(start) {
-            return None;
-        }
+        // if !self.walkbox.contains(start) {
+        //     // if !self.walkbox.contains(start) || !self.walkbox.contains(end) {
+        //     return None;
+        // }
         let l = line_segment(start, end);
         if l.length() < f64::EPSILON {
             return None;

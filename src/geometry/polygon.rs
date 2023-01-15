@@ -5,36 +5,10 @@ use super::{line_segment, LineSegment, Point};
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct Polygon {
     pub vertices: Vec<Point>,
-    xmin: f64,
-    xmax: f64,
-    ymin: f64,
-    ymax: f64,
 }
 impl Polygon {
     pub fn new(vertices: Vec<Point>) -> Self {
-        let mut xmin = f64::MAX;
-        let mut xmax = 0.0;
-        let mut ymin = f64::MAX;
-        let mut ymax = 0.0;
-        for v in &vertices {
-            if v.x > xmax {
-                xmax = v.x
-            } else if v.x < xmin {
-                xmin = v.x
-            }
-            if v.y > ymax {
-                ymax = v.y
-            } else if v.y < ymin {
-                ymin = v.y
-            }
-        }
-        Self {
-            vertices,
-            xmin,
-            xmax,
-            ymin,
-            ymax,
-        }
+        Self { vertices }
     }
     pub fn edges(&self) -> impl Iterator<Item = LineSegment> + '_ {
         let l = line_segment(self.vertices[self.vertices.len() - 1], self.vertices[0]);
@@ -74,19 +48,11 @@ impl Polygon {
             }
         })
     }
-    pub fn contains(&self, p: Point) -> bool {
-        if p.x < self.xmin || p.x > self.xmax || p.y < self.ymin || p.y > self.ymax {
-            return false;
-        }
-        return true;
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry::{
-      Point,  point,Polygon
-    };
+    use crate::geometry::{point, Point, Polygon};
 
     #[test]
     fn test_polygon_edges() {

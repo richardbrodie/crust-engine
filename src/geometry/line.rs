@@ -13,22 +13,24 @@ pub struct Line {
     pub c: f64,
 }
 impl Line {
-    pub fn intersects(&self, other: &Self) -> Option<Point> {
-        let det = self.a * self.b - other.b * self.a;
-
-        if det.abs() < f64::EPSILON {
-            return None;
-        }
-
-        let x = (self.c * other.b - other.c * self.b) / det;
-        let y = (self.a * other.c - other.a * self.c) / det;
-
-        return Some(point(x, y));
-    }
+    // pub fn intersects(&self, other: &Self) -> Option<Point> {
+    //     let det = self.a * self.b - other.b * self.a;
+    //
+    //     if det.abs() < f64::EPSILON {
+    //         return None;
+    //     }
+    //
+    //     let x = (self.c * other.b - other.c * self.b) / det;
+    //     let y = (self.a * other.c - other.a * self.c) / det;
+    //
+    //     return Some(point(x, y));
+    // }
 }
-pub fn line(d: Vector, o: Point) -> Line {
-    let c = o.y * (o.x + d.x) - o.x * (o.y + d.y);
-    Line { a: d.x, b: d.y, c }
+pub fn line(start: Point, end: Point) -> Line {
+    let a = end.y - start.y;
+    let b = start.x - end.x;
+    let c = (end.x * start.y) - (start.x * end.y);
+    Line { a, b, c }
 }
 
 #[derive(Default, Debug, PartialEq, PartialOrd, Clone, Copy)]
@@ -96,6 +98,26 @@ impl LineSegment {
 
         let p = self.start + sv * ua;
         return Some(p);
+    }
+    pub fn intersects3(&self, ls: &LineSegment) -> bool {
+        let first_line = line(self.start, self.end);
+        let d1 = (first_line.a * ls.start.x) + (first_line.b * ls.start.y) + first_line.c;
+        let d2 = (first_line.a * ls.end.x) + (first_line.b * ls.end.y) + first_line.c;
+        if (d1 > 0.0 && d2 > 0.0) || (d1 < 0.0 && d2 < 0.0) {
+            return false;
+        }
+
+        let other_line = line(ls.start, ls.end);
+        let d1 = (other_line.a * self.start.x) + (other_line.b * self.start.y) + other_line.c;
+        let d2 = (other_line.a * self.end.x) + (other_line.b * self.end.y) + other_line.c;
+        if (d1 > 0.0 && d2 > 0.0) || (d1 < 0.0 && d2 < 0.0) {
+            return false;
+        }
+
+        if (first_line.a * other_line.b) - (other_line.a * first_line.b) == 0.0 {
+            return false;
+        }
+        return true;
     }
     pub fn crosses(&self, other: &Self) -> bool {
         let denominator = ((self.end.x - self.start.x) * (other.end.y - other.start.y))
@@ -175,6 +197,53 @@ mod tests {
         point,
     };
 
+    use super::LineSegment;
+
+    fn linesegments() -> Vec<(LineSegment, LineSegment, bool)> {
+        vec![
+            (
+                line_segment(point(0.0, 0.0), point(2.0, 8.0)),
+                line_segment(point(8.0, 0.0), point(0.0, 20.0)),
+                false,
+            ),
+            (
+                line_segment(point(0.0, 10.0), point(2.0, 0.0)),
+                line_segment(point(10.0, 0.0), point(0.0, 5.0)),
+                true,
+            ),
+            (
+                line_segment(point(0.0, 0.0), point(0.0, 10.0)),
+                line_segment(point(2.0, 0.0), point(2.0, 10.0)),
+                false,
+            ),
+            (
+                line_segment(point(0.0, 0.0), point(5.0, 5.0)),
+                line_segment(point(2.0, 0.0), point(7.0, 5.0)),
+                false,
+            ),
+            (
+                line_segment(point(0.0, 0.0), point(5.0, 5.0)),
+                line_segment(point(2.0, 2.0), point(7.0, 2.0)),
+                true,
+            ),
+            (
+                line_segment(point(0.0, 0.0), point(5.0, 5.0)),
+                line_segment(point(7.0, 7.0), point(10.0, 10.0)),
+                false,
+            ),
+            (
+                line_segment(point(4.0, 0.0), point(6.0, 10.0)),
+                line_segment(point(0.0, 3.0), point(10.0, 7.0)),
+                true,
+            ),
+            (
+                line_segment(point(0.0, 0.0), point(1.0, 1.0)),
+                line_segment(point(1.0, 2.0), point(4.0, 5.0)),
+                false,
+            ),
+        ]
+    }
+
     #[test]
     fn test_lerp() {
         assert_eq!(lerp(0.0, 1.0, 0.5), 0.5);
@@ -224,38 +293,12 @@ mod tests {
     }
 
     #[test]
-    fn test_lines_intersect() {
-        let l1 = line_segment(point(0.0, 0.0), point(2.0, 8.0));
-        let l2 = line_segment(point(8.0, 0.0), point(0.0, 20.0));
-        assert!(!l1.crosses(&l2));
-
-        let l1 = line_segment(point(0.0, 10.0), point(2.0, 0.0));
-        let l2 = line_segment(point(10.0, 0.0), point(0.0, 5.0));
-        assert!(l1.crosses(&l2));
-
-        let l1 = line_segment(point(0.0, 0.0), point(0.0, 10.0));
-        let l2 = line_segment(point(2.0, 0.0), point(2.0, 10.0));
-        assert!(!l1.crosses(&l2));
-
-        let l1 = line_segment(point(0.0, 0.0), point(5.0, 5.0));
-        let l2 = line_segment(point(2.0, 0.0), point(7.0, 5.0));
-        assert!(!l1.crosses(&l2));
-
-        let l1 = line_segment(point(0.0, 0.0), point(5.0, 5.0));
-        let l2 = line_segment(point(2.0, 2.0), point(7.0, 2.0));
-        assert!(!l1.crosses(&l2));
-
-        let l1 = line_segment(point(0.0, 0.0), point(5.0, 5.0));
-        let l2 = line_segment(point(7.0, 7.0), point(10.0, 10.0));
-        assert!(!l1.crosses(&l2));
-
-        let l1 = line_segment(point(4.0, 0.0), point(6.0, 10.0));
-        let l2 = line_segment(point(0.0, 3.0), point(10.0, 7.0));
-        assert!(l1.crosses(&l2));
-
-        let l1 = line_segment(point(0.0, 0.0), point(1.0, 1.0));
-        let l2 = line_segment(point(1.0, 2.0), point(4.0, 5.0));
-        assert!(!l1.crosses(&l2));
+    fn test_linesegment_crosses() {
+        for (a, b, c) in linesegments() {
+            assert_eq!(a.intersects(&b), c);
+            assert_eq!(a.intersects2(&b).is_some(), c);
+            assert_eq!(a.intersects3(&b), c);
+        }
     }
 
     #[test]
