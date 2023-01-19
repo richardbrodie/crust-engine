@@ -1,7 +1,5 @@
 use crate::geometry::{point, Point};
 
-use super::Vector;
-
 const GRAPH_COLOUR: [u8; 4] = [255, 255, 255, 255];
 const BOX_COLOUR: [u8; 4] = [10, 10, 240, 255];
 const PATH_COLOUR: [u8; 4] = [10, 240, 10, 255];
@@ -50,55 +48,55 @@ impl LineSegment {
 
         return points;
     }
-    pub fn intersects(&self, other: &Self) -> bool {
-        let cmp = other.start - self.start;
-        let r = self.end - self.start;
-        let s = other.end - other.start;
-
-        let cmpxr = cmp.cross(r);
-        let cmpxs = cmp.cross(s);
-        let rxs = r.cross(s);
-
-        if cmpxr.abs() < f64::EPSILON {
-            return ((other.start.x - self.start.x < 0.0) != (other.start.x - self.end.x < 0.0))
-                || ((other.start.y - self.start.y < 0.0) != (other.start.y - self.end.y < 0.0));
-        }
-
-        if rxs.abs() < f64::EPSILON {
-            return false; // Lines are parallel.
-        }
-
-        let rxsr = 1.0 / rxs;
-        let t = cmpxs * rxsr;
-        let u = cmpxr * rxsr;
-
-        return (t >= 0.0) && (t <= 1.0) && (u >= 0.0) && (u <= 1.0);
-    }
-    pub fn intersects2(&self, other: &Self) -> Option<Point> {
-        let ov = other.end - other.start;
-        let sv = self.end - self.start;
-        let denom = (ov.y * sv.x) - (ov.x * sv.y);
-        let d = (sv.y * ov.x) - (sv.x * ov.y);
-
-        if denom.abs() < f64::EPSILON || d.abs() < f64::EPSILON {
-            return None;
-        }
-
-        let nume_a =
-            (ov.x * (self.start.y - other.start.y)) - (ov.y * (self.start.x - other.start.x));
-        let nume_b =
-            (sv.x * (other.start.y - self.start.y)) - (sv.y * (other.start.x - self.start.x));
-
-        let ua = nume_a / denom;
-        let ub = nume_b / d;
-
-        if ua < 0.0 || ua > 1.0 || ub < 0.0 || ub > 1.0 {
-            return None;
-        }
-
-        let p = self.start + sv * ua;
-        return Some(p);
-    }
+    // pub fn intersects(&self, other: &Self) -> bool {
+    //     let cmp = other.start - self.start;
+    //     let r = self.end - self.start;
+    //     let s = other.end - other.start;
+    //
+    //     let cmpxr = cmp.cross(r);
+    //     let cmpxs = cmp.cross(s);
+    //     let rxs = r.cross(s);
+    //
+    //     if cmpxr.abs() < f64::EPSILON {
+    //         return ((other.start.x - self.start.x < 0.0) != (other.start.x - self.end.x < 0.0))
+    //             || ((other.start.y - self.start.y < 0.0) != (other.start.y - self.end.y < 0.0));
+    //     }
+    //
+    //     if rxs.abs() < f64::EPSILON {
+    //         return false; // Lines are parallel.
+    //     }
+    //
+    //     let rxsr = 1.0 / rxs;
+    //     let t = cmpxs * rxsr;
+    //     let u = cmpxr * rxsr;
+    //
+    //     return (t >= 0.0) && (t <= 1.0) && (u >= 0.0) && (u <= 1.0);
+    // }
+    // pub fn intersects2(&self, other: &Self) -> Option<Point> {
+    //     let ov = other.end - other.start;
+    //     let sv = self.end - self.start;
+    //     let denom = (ov.y * sv.x) - (ov.x * sv.y);
+    //     let d = (sv.y * ov.x) - (sv.x * ov.y);
+    //
+    //     if denom.abs() < f64::EPSILON || d.abs() < f64::EPSILON {
+    //         return None;
+    //     }
+    //
+    //     let nume_a =
+    //         (ov.x * (self.start.y - other.start.y)) - (ov.y * (self.start.x - other.start.x));
+    //     let nume_b =
+    //         (sv.x * (other.start.y - self.start.y)) - (sv.y * (other.start.x - self.start.x));
+    //
+    //     let ua = nume_a / denom;
+    //     let ub = nume_b / d;
+    //
+    //     if ua < 0.0 || ua > 1.0 || ub < 0.0 || ub > 1.0 {
+    //         return None;
+    //     }
+    //
+    //     let p = self.start + sv * ua;
+    //     return Some(p);
+    // }
     pub fn intersects3(&self, ls: &LineSegment) -> bool {
         let first_line = line(self.start, self.end);
         let d1 = (first_line.a * ls.start.x) + (first_line.b * ls.start.y) + first_line.c;
@@ -295,8 +293,8 @@ mod tests {
     #[test]
     fn test_linesegment_crosses() {
         for (a, b, c) in linesegments() {
-            assert_eq!(a.intersects(&b), c);
-            assert_eq!(a.intersects2(&b).is_some(), c);
+            // assert_eq!(a.intersects(&b), c);
+            // assert_eq!(a.intersects2(&b).is_some(), c);
             assert_eq!(a.intersects3(&b), c);
         }
     }

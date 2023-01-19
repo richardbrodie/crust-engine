@@ -4,7 +4,7 @@ use winit::event::ElementState;
 
 use crate::{
     buffer::Buffer,
-    game::{Actor, Object, Scenery, Updatable, WalkBox},
+    game::{Actor, Object, Scenery, ShortestPath, Updatable, WalkBox},
     geometry::{point, Graph, LineType, Point, Polygon},
     text::GlyphWriter,
 };
@@ -18,6 +18,8 @@ pub struct GameState {
     mouse_location: Point,
     mouse_click: bool,
     character: Actor,
+    character_destimation: Option<Point>,
+    character_path: Option<ShortestPath>,
     actors: Vec<Actor>,
     objects: Vec<Object>,
     scenery: Scenery,
@@ -29,7 +31,7 @@ impl GameState {
     pub fn new() -> Self {
         let character_image = "resources/fox.png";
         // let ball_image = "resources/ball.png";
-        let character = Actor::new(character_image, point(150.0, 150.0), Some(0.07));
+        let character = Actor::new(character_image, point(150.0, 150.0), Some(0.15));
         // let objects = vec![Object::new(ball_image, point(350.0, 350.0))];
         let scenery = Scenery::new();
         let walkbox = WalkBox::new(
@@ -57,6 +59,8 @@ impl GameState {
             exit_requested: false,
             previous_time: Instant::now(),
             character,
+            character_path: None,
+            character_destimation: None,
             actors: vec![],
             objects: vec![],
             scenery,
@@ -68,7 +72,6 @@ impl GameState {
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
-        self.graph.add_temporary_edges(self.character.location, loc);
         self.mouse_location = loc;
     }
     pub fn mouse_click(&mut self, state: ElementState) {
@@ -76,54 +79,103 @@ impl GameState {
             self.mouse_click = true;
         }
     }
-    pub fn tick(&mut self, buffer: &mut Buffer) -> bool {
+    pub fn tick(&mut self) -> bool {
         let delta = self.previous_time.elapsed();
         if delta >= TICK {
             self.previous_time = Instant::now();
 
-            self.scenery.draw(buffer);
-
-            for l in self.walkbox.exterior.edges() {
-                buffer.draw_line(&l, crate::geometry::LineType::Box);
+            if cfg!(debug_assertions) {
+                let dest_point = self.calculate_destination();
+                self.character_destimation = Some(dest_point);
+                self.graph
+                    .add_temporary_edges(self.character.location, dest_point);
+                self.character_path = self.graph.path_to(self.character.location, dest_point);
             }
-            for l in self.graph.walkable_edges() {
-                buffer.draw_line(l, LineType::Graph);
-            }
 
-            if let Some(path) = self
-                .graph
-                .path_to(self.character.location, self.mouse_location)
-            {
-                for l in path.lines() {
-                    buffer.draw_line(&l, LineType::Path);
+            if self.mouse_click {
+                self.mouse_click = false;
+                if !cfg!(debug_assertions) {
+                    let dest_point = self.calculate_destination();
+                    self.graph
+                        .add_temporary_edges(self.character.location, dest_point);
+                    self.character_path = self.graph.path_to(self.character.location, dest_point);
                 }
-                if self.mouse_click {
-                    self.mouse_click = false;
+                if let Some(path) = &self.character_path {
                     self.character.set_path(path.points().map(|e| e.to_owned()));
                 }
             }
 
             self.character.mouse_over(self.mouse_location);
             self.character.tick(delta);
-            self.character.draw(buffer);
 
             self.objects.iter_mut().for_each(|s| {
                 s.mouse_over(self.mouse_location);
                 s.tick(delta);
-                s.draw(buffer);
             });
 
             self.actors.iter_mut().for_each(|s| {
                 s.mouse_over(self.mouse_location);
                 s.tick(delta);
-                s.draw(buffer);
             });
-
-            // let to = self.text_writer.make_string("hello world").to_bmp();
-            // let p = point(256.0, 256.0);
-            // buffer.draw_bmp(&to, p);
         }
         delta >= TICK
     }
-    // fn calculate_path(&self) -> Line {}
+
+    pub fn draw(&self, buffer: &mut Buffer) {
+        self.scenery.draw(buffer);
+
+        if cfg!(debug_assertions) {
+            for l in self.walkbox.exterior.edges() {
+                buffer.draw_line(&l, crate::geometry::LineType::Box);
+            }
+            for l in self.graph.walkable_edges() {
+                buffer.draw_line(l, LineType::Graph);
+            }
+        }
+
+        self.character.draw(buffer);
+        self.objects.iter().for_each(|s| {
+            s.draw(buffer);
+        });
+        self.actors.iter().for_each(|s| {
+            s.draw(buffer);
+        });
+
+        if cfg!(debug_assertions) {
+            if let (Some(path), Some(dest_point)) =
+                (&self.character_path, self.character_destimation)
+            {
+                for l in path.lines() {
+                    buffer.draw_line(&l, LineType::Path);
+                }
+                buffer.draw_point(dest_point);
+            }
+
+            let l = self.mouse_location;
+            let to = self
+                .text_writer
+                .make_string(&format!("{}, {}", l.x, l.y))
+                .to_bmp();
+            let p = point(l.x - 20.0, l.y + 10.0);
+            buffer.draw_bmp(&to, p);
+        }
+    }
+
+    fn calculate_destination(&self) -> Point {
+        if self.walkbox.contains(self.mouse_location) {
+            return self.mouse_location;
+        }
+        let res = self
+            .walkbox
+            .edges()
+            .map(|side| side.closest_point(self.mouse_location))
+            .fold((f64::MAX, self.mouse_location), |acc, p| {
+                let dist = (p - self.mouse_location).length();
+                if acc.0 > dist {
+                    return (dist, p);
+                }
+                acc
+            });
+        res.1
+    }
 }

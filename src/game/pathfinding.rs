@@ -86,6 +86,7 @@ pub fn astar(graph: &Graph, start: Point, goal: Point) -> Option<ShortestPath> {
     return None;
 }
 
+#[derive(Default, Debug, PartialEq, Clone, PartialOrd, Ord, Eq)]
 pub struct ShortestPath {
     start: Point,
     end: Point,

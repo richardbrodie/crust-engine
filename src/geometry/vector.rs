@@ -11,30 +11,34 @@ pub fn vector(x: f64, y: f64) -> Vector {
     Vector { x, y }
 }
 impl Vector {
-    pub fn lerp_point(&self, o: Self, t: f64) -> Self {
-        *self + ((o - *self) * t)
-    }
-    pub fn round(&self) -> Self {
-        Self {
-            x: self.x.round(),
-            y: self.y.round(),
-        }
-    }
+    // pub fn lerp_point(&self, o: Self, t: f64) -> Self {
+    //     *self + ((o - *self) * t)
+    // }
+    // pub fn round(&self) -> Self {
+    //     Self {
+    //         x: self.x.round(),
+    //         y: self.y.round(),
+    //     }
+    // }
+    #[inline(always)]
     pub fn dot(&self, rhs: Self) -> f64 {
         (self.x * rhs.x) + (self.y * rhs.y)
     }
-    pub fn max_element(&self) -> f64 {
-        self.x.max(self.y)
-    }
+    // pub fn max_element(&self) -> f64 {
+    //     self.x.max(self.y)
+    // }
+    #[inline(always)]
     pub fn length(&self) -> f64 {
         self.dot(*self).sqrt()
     }
+    #[inline(always)]
     pub fn length_sq(&self) -> f64 {
         self.dot(*self)
     }
-    pub fn normalise(&self) -> Self {
-        *self / self.length()
-    }
+    // pub fn normalise(&self) -> Self {
+    //     *self / self.length()
+    // }
+    #[inline(always)]
     pub fn cross(&self, other: Self) -> f64 {
         self.x * other.y - self.y * other.x
     }
@@ -130,10 +134,10 @@ mod tests {
         assert_eq!(round(l, 5), 153.73)
     }
 
-    #[test]
-    fn test_normalise() {
-        let l = vector(88.8, 4.44).normalise();
-        let ll = vector(round(l.x, 5), round(l.y, 5));
-        assert_eq!(ll, vector(0.99875, 0.04994));
-    }
+    // #[test]
+    // fn test_normalise() {
+    //     let l = vector(88.8, 4.44).normalise();
+    //     let ll = vector(round(l.x, 5), round(l.y, 5));
+    //     assert_eq!(ll, vector(0.99875, 0.04994));
+    // }
 }

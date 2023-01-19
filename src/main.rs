@@ -8,7 +8,6 @@ use winit::{
 };
 
 mod buffer;
-// mod components;
 mod error;
 mod game;
 mod game_state;
@@ -62,13 +61,16 @@ fn main() {
                 } => game_state.mouse_click(state),
                 _ => {}
             },
-            Event::RedrawRequested(_) => buffer.render(),
+            Event::RedrawRequested(_) => {
+                game_state.draw(&mut buffer);
+                buffer.render()
+            }
             Event::MainEventsCleared => {
                 if game_state.exit_requested {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
-                game_state.tick(&mut buffer);
+                game_state.tick();
                 window.request_redraw();
             }
             _ => {}

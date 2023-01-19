@@ -10,9 +10,11 @@ pub struct Point {
     pub y: f64,
 }
 impl Point {
+    #[inline(always)]
     pub fn xy(&self) -> (usize, usize) {
         (self.x as usize, self.y as usize)
     }
+    #[inline(always)]
     pub fn is_convex(p: Self, c: Self, n: Self) -> bool {
         let left = c - p;
         let right = n - c;

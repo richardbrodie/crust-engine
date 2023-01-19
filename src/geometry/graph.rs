@@ -47,10 +47,6 @@ impl Graph {
         }
     }
     fn add_edge(&self, start: Point, end: Point) -> Option<LineSegment> {
-        // if !self.walkbox.contains(start) {
-        //     // if !self.walkbox.contains(start) || !self.walkbox.contains(end) {
-        //     return None;
-        // }
         let l = line_segment(start, end);
         if l.length() < f64::EPSILON {
             return None;
