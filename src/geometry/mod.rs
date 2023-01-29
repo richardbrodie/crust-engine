@@ -1,11 +1,9 @@
-mod graph;
 mod line;
 mod point;
 mod polygon;
 mod rect;
 mod vector;
 
-pub use graph::Graph;
 pub use line::{line, line_segment, Line, LineSegment, LineType};
 pub use point::{point, Point};
 pub use polygon::Polygon;

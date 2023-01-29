@@ -1,12 +1,14 @@
 mod actor;
+mod game_state;
 mod object;
 mod pathfinding;
 mod scenery;
 mod walkbox;
 
 pub use actor::Actor;
+pub use game_state::GameState;
 pub use object::Object;
-pub use pathfinding::{astar, ShortestPath};
+pub use pathfinding::{astar, Graph, ShortestPath};
 pub use scenery::Scenery;
 pub use walkbox::WalkBox;
 

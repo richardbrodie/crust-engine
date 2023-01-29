@@ -4,10 +4,12 @@ use winit::event::ElementState;
 
 use crate::{
     buffer::Buffer,
-    game::{Actor, Object, Scenery, ShortestPath, Updatable, WalkBox},
-    geometry::{point, Graph, LineType, Point, Polygon},
+    game::{Actor, Graph, Object, Scenery, ShortestPath, Updatable, WalkBox},
+    geometry::{point, LineType, Point, Polygon},
     text::GlyphWriter,
 };
+
+use super::astar;
 
 pub const TICK: Duration = Duration::from_millis(1000 / 90);
 
@@ -25,7 +27,6 @@ pub struct GameState {
     scenery: Scenery,
     walkbox: WalkBox,
     text_writer: GlyphWriter,
-    graph: Graph,
 }
 impl GameState {
     pub fn new() -> Self {
@@ -53,7 +54,6 @@ impl GameState {
             vec![],
         );
         let text_writer = GlyphWriter::new();
-        let graph = Graph::new(walkbox.clone());
 
         Self {
             exit_requested: false,
@@ -68,7 +68,6 @@ impl GameState {
             mouse_click: false,
             text_writer,
             walkbox,
-            graph,
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
@@ -87,18 +86,18 @@ impl GameState {
             if cfg!(debug_assertions) {
                 let dest_point = self.calculate_destination();
                 self.character_destimation = Some(dest_point);
-                self.graph
+                self.walkbox
                     .add_temporary_edges(self.character.location, dest_point);
-                self.character_path = self.graph.path_to(self.character.location, dest_point);
+                self.character_path = astar(&self.walkbox, self.character.location, dest_point);
             }
 
             if self.mouse_click {
                 self.mouse_click = false;
                 if !cfg!(debug_assertions) {
                     let dest_point = self.calculate_destination();
-                    self.graph
+                    self.walkbox
                         .add_temporary_edges(self.character.location, dest_point);
-                    self.character_path = self.graph.path_to(self.character.location, dest_point);
+                    self.character_path = astar(&self.walkbox, self.character.location, dest_point);
                 }
                 if let Some(path) = &self.character_path {
                     self.character.set_path(path.points().map(|e| e.to_owned()));
@@ -125,10 +124,10 @@ impl GameState {
         self.scenery.draw(buffer);
 
         if cfg!(debug_assertions) {
-            for l in self.walkbox.exterior.edges() {
+            for l in self.walkbox.edges.iter() {
                 buffer.draw_line(&l, crate::geometry::LineType::Box);
             }
-            for l in self.graph.walkable_edges() {
+            for l in self.walkbox.walkable_edges() {
                 buffer.draw_line(l, LineType::Graph);
             }
         }
@@ -167,7 +166,8 @@ impl GameState {
         }
         let res = self
             .walkbox
-            .edges()
+            .edges
+            .iter()
             .map(|side| side.closest_point(self.mouse_location))
             .fold((f64::MAX, self.mouse_location), |acc, p| {
                 let dist = (p - self.mouse_location).length();

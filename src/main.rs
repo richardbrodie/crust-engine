@@ -1,5 +1,5 @@
 use buffer::Buffer;
-use game_state::GameState;
+use game::GameState;
 
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
@@ -10,7 +10,6 @@ use winit::{
 mod buffer;
 mod error;
 mod game;
-mod game_state;
 mod geometry;
 mod image;
 mod text;

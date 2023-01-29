@@ -1,6 +1,31 @@
 use std::collections::{BinaryHeap, HashMap};
 
-use crate::geometry::{line_segment, Graph, LineSegment, Point};
+use crate::geometry::{line_segment, LineSegment, Point};
+
+pub struct EdgeIterator<'a> {
+    data: Vec<&'a LineSegment>,
+    i: usize,
+}
+impl<'a> EdgeIterator<'a> {
+    pub fn new(data: Vec<&'a LineSegment>) -> Self {
+        Self { data, i: 0 }
+    }
+}
+pub trait Graph {
+    fn walkable_edges(&self) -> EdgeIterator;
+    fn neighbours(&self, point: Point) -> EdgeIterator;
+}
+impl<'a> Iterator for EdgeIterator<'a> {
+    type Item = &'a LineSegment;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.i >= self.data.len() {
+            None
+        } else {
+            self.i += 1;
+            Some(&self.data[self.i - 1])
+        }
+    }
+}
 
 #[derive(Default, Debug, PartialEq, Clone, PartialOrd, Ord, Hash, Eq, Copy)]
 struct UPoint {
@@ -45,7 +70,10 @@ impl PartialOrd for State {
     }
 }
 
-pub fn astar(graph: &Graph, start: Point, goal: Point) -> Option<ShortestPath> {
+pub fn astar<G>(graph: &G, start: Point, goal: Point) -> Option<ShortestPath>
+where
+    G: Graph,
+{
     let mut frontier = BinaryHeap::new();
     let mut distances: HashMap<UPoint, f64> = graph
         .walkable_edges()
@@ -126,10 +154,8 @@ mod tests {
         geometry::{point, Polygon},
     };
 
-    use super::Graph;
-
-    fn make_graph() -> Graph {
-        Graph::new(WalkBox::new(
+    fn make_graph() -> WalkBox {
+        WalkBox::new(
             Polygon::new(vec![
                 point(60.0, 60.0),
                 point(300.0, 60.0),
@@ -146,7 +172,7 @@ mod tests {
                 point(60.0, 60.0),
             ]),
             vec![],
-        ))
+        )
     }
 
     #[test]
