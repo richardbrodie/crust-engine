@@ -99,6 +99,22 @@ impl WalkBox {
         }
         return None;
     }
+    pub fn clamp_destination(&self, pos: Point) -> Point {
+        if self.contains(pos) {
+            return pos;
+        }
+        let res = self.edges.iter().map(|side| side.closest_point(pos)).fold(
+            (f64::MAX, pos),
+            |acc, p| {
+                let dist = (p - pos).length();
+                if acc.0 > dist {
+                    return (dist, p);
+                }
+                acc
+            },
+        );
+        res.1
+    }
 }
 impl Graph for WalkBox {
     fn walkable_edges(&self) -> EdgeIterator {

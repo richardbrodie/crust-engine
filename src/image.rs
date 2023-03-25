@@ -33,6 +33,27 @@ impl Bitmap {
     pub fn data(&self) -> &[u8] {
         &self.data
     }
+    pub fn rescale(&self, scale: f32) -> Self {
+        let new_size = rect(
+            (self.size.w as f32 * scale) as usize,
+            (self.size.h as f32 * scale) as usize,
+        );
+        let mut new_data = vec![0; new_size.w * new_size.h * 4];
+        for nh in 0..new_size.h {
+            // let ro = new_size.w * nh * 4;
+            for nw in 0..new_size.w {
+                let ow = (nw as f32 / scale) as usize;
+                let oh = (nh as f32 / scale) as usize;
+                let oo = (oh * self.size.w * 4) + (ow * 4);
+                let no = (nh * new_size.w * 4) + (nw * 4);
+                new_data[no..no + 4].copy_from_slice(&self.data[oo..oo + 4]);
+            }
+        }
+        return Self {
+            data: new_data,
+            size: new_size,
+        };
+    }
 }
 
 #[derive(Default, Debug, PartialEq)]
@@ -133,9 +154,16 @@ impl Image {
             Self::Static(StaticImage::new(bmp))
         }
     }
-    pub fn draw(&self, buf: &mut Buffer, p: Point) {
+    pub fn draw(&self, buf: &mut Buffer, p: Point, s: f32) {
         match self {
-            Self::Static(i) => buf.draw_bmp(i.data(), p),
+            Self::Static(i) => {
+                if s != 1.0 {
+                    let b = i.data().rescale(s);
+                    buf.draw_bmp(&b, p);
+                    return;
+                }
+                buf.draw_bmp(i.data(), p);
+            }
             Self::Animated(a) => {
                 let f = a.current_frame();
                 let p = f.offset(p);

@@ -1,6 +1,11 @@
-use std::time::{Duration, Instant};
+use std::{
+    fs::File,
+    io::Read,
+    path::Path,
+    time::{Duration, Instant},
+};
 
-use winit::event::ElementState;
+use winit::event::{ElementState, MouseButton};
 
 use crate::{
     buffer::Buffer,
@@ -9,32 +14,26 @@ use crate::{
     text::GlyphWriter,
 };
 
-use super::astar;
+use super::{astar, Character, MouseState};
 
-pub const TICK: Duration = Duration::from_millis(1000 / 90);
+pub const TICK: Duration = Duration::from_millis(1000 / 60);
 
 #[derive(Debug)]
 pub struct GameState {
     pub exit_requested: bool,
     previous_time: Instant,
-    mouse_location: Point,
-    mouse_click: bool,
-    character: Actor,
-    character_destimation: Option<Point>,
-    character_path: Option<ShortestPath>,
-    actors: Vec<Actor>,
-    objects: Vec<Object>,
-    scenery: Scenery,
+    mouse_state: MouseState,
+    character: Character,
     walkbox: WalkBox,
     text_writer: GlyphWriter,
+    room: Room,
+
+    pub path: Option<ShortestPath>,
 }
 impl GameState {
     pub fn new() -> Self {
-        let character_image = "resources/fox.png";
         // let ball_image = "resources/ball.png";
-        let character = Actor::new(character_image, point(150.0, 150.0), Some(0.15));
         // let objects = vec![Object::new(ball_image, point(350.0, 350.0))];
-        let scenery = Scenery::new();
         let walkbox = WalkBox::new(
             Polygon::new(vec![
                 point(60.0, 60.0),
@@ -53,75 +52,66 @@ impl GameState {
             ]),
             vec![],
         );
-        let text_writer = GlyphWriter::new();
 
         Self {
             exit_requested: false,
             previous_time: Instant::now(),
-            character,
-            character_path: None,
-            character_destimation: None,
-            actors: vec![],
-            objects: vec![],
-            scenery,
-            mouse_location: point(0.0, 0.0),
-            mouse_click: false,
-            text_writer,
+            character: Character::new(),
+            mouse_state: MouseState::default(),
+            text_writer: GlyphWriter::new(),
             walkbox,
+            room: Room::new(),
+
+            path: None,
         }
     }
     pub fn mouse_over(&mut self, loc: Point) {
-        self.mouse_location = loc;
+        self.mouse_state.position = loc;
+        self.room.mouse_state(&self.mouse_state);
+        self.character.mouse_state(&self.mouse_state);
     }
-    pub fn mouse_click(&mut self, state: ElementState) {
-        if state == ElementState::Pressed {
-            self.mouse_click = true;
+    pub fn mouse_click(&mut self, button: MouseButton, state: ElementState) {
+        let pressed = state == ElementState::Pressed;
+        match button {
+            MouseButton::Left => self.mouse_state.left_button = pressed,
+            MouseButton::Right => self.mouse_state.right_button = pressed,
+            _ => {}
         }
+        self.room.mouse_state(&self.mouse_state);
+        self.character.mouse_state(&self.mouse_state);
+    }
+    fn mouse_pos(&self) -> Point {
+        self.mouse_state.position
+    }
+    fn mouse_clicked(&self) -> bool {
+        self.mouse_state.left_button
     }
     pub fn tick(&mut self) -> bool {
         let delta = self.previous_time.elapsed();
         if delta >= TICK {
             self.previous_time = Instant::now();
 
+            let dest_point = self.walkbox.clamp_destination(self.mouse_pos());
+            self.walkbox
+                .add_temporary_edges(self.character.position, dest_point);
+            let path = astar(&self.walkbox, self.character.position, dest_point);
             if cfg!(debug_assertions) {
-                let dest_point = self.calculate_destination();
-                self.character_destimation = Some(dest_point);
-                self.walkbox
-                    .add_temporary_edges(self.character.location, dest_point);
-                self.character_path = astar(&self.walkbox, self.character.location, dest_point);
+                self.path = path.clone();
             }
 
-            if self.mouse_click {
-                self.mouse_click = false;
-                if !cfg!(debug_assertions) {
-                    let dest_point = self.calculate_destination();
-                    self.walkbox
-                        .add_temporary_edges(self.character.location, dest_point);
-                    self.character_path = astar(&self.walkbox, self.character.location, dest_point);
-                }
-                if let Some(path) = &self.character_path {
-                    self.character.set_path(path.points().map(|e| e.to_owned()));
-                }
+            if self.mouse_clicked() {
+                self.mouse_state.left_button = false;
+                self.character.set_path(path);
             }
 
-            self.character.mouse_over(self.mouse_location);
+            self.room.tick(delta);
             self.character.tick(delta);
-
-            self.objects.iter_mut().for_each(|s| {
-                s.mouse_over(self.mouse_location);
-                s.tick(delta);
-            });
-
-            self.actors.iter_mut().for_each(|s| {
-                s.mouse_over(self.mouse_location);
-                s.tick(delta);
-            });
         }
         delta >= TICK
     }
 
     pub fn draw(&self, buffer: &mut Buffer) {
-        self.scenery.draw(buffer);
+        self.room.draw(buffer);
 
         if cfg!(debug_assertions) {
             for l in self.walkbox.edges.iter() {
@@ -131,26 +121,15 @@ impl GameState {
                 buffer.draw_line(l, LineType::Graph);
             }
         }
-
+        if let Some(path) = &self.character.path {
+            for l in path.lines() {
+                buffer.draw_line(&l, LineType::Path);
+            }
+        }
         self.character.draw(buffer);
-        self.objects.iter().for_each(|s| {
-            s.draw(buffer);
-        });
-        self.actors.iter().for_each(|s| {
-            s.draw(buffer);
-        });
 
         if cfg!(debug_assertions) {
-            if let (Some(path), Some(dest_point)) =
-                (&self.character_path, self.character_destimation)
-            {
-                for l in path.lines() {
-                    buffer.draw_line(&l, LineType::Path);
-                }
-                buffer.draw_point(dest_point);
-            }
-
-            let l = self.mouse_location;
+            let l = self.mouse_state.position;
             let to = self
                 .text_writer
                 .make_string(&format!("{}, {}", l.x, l.y))
@@ -159,23 +138,62 @@ impl GameState {
             buffer.draw_bmp(&to, p);
         }
     }
+}
 
-    fn calculate_destination(&self) -> Point {
-        if self.walkbox.contains(self.mouse_location) {
-            return self.mouse_location;
+#[derive(Debug)]
+struct Room {
+    scenery: Scenery,
+    actors: Vec<Actor>,
+    objects: Vec<Object>,
+}
+impl Room {
+    fn new() -> Self {
+        let scenery = Scenery::new();
+        Self {
+            scenery,
+            actors: vec![],
+            objects: vec![],
         }
-        let res = self
-            .walkbox
-            .edges
-            .iter()
-            .map(|side| side.closest_point(self.mouse_location))
-            .fold((f64::MAX, self.mouse_location), |acc, p| {
-                let dist = (p - self.mouse_location).length();
-                if acc.0 > dist {
-                    return (dist, p);
-                }
-                acc
-            });
-        res.1
+    }
+    fn update_positions(&self, character: Point, mouse: Point) {
+        //
+    }
+    fn load(room_id: &str) {
+        let p = Path::new("resources/rooms");
+        p.join("room_id");
+        let mut f = File::open(p).unwrap();
+        let mut contents = String::new();
+        f.read_to_string(&mut contents).expect("couldn't read file");
+        // let scene: Scene = serde_yaml::from_str(&contents).unwrap();
+        // scene
+    }
+}
+impl Updatable for Room {
+    fn tick(&mut self, dt: Duration) {
+        self.objects.iter_mut().for_each(|s| {
+            s.tick(dt);
+        });
+
+        self.actors.iter_mut().for_each(|s| {
+            s.tick(dt);
+        });
+    }
+    fn draw(&self, buffer: &mut Buffer) {
+        self.scenery.draw(buffer);
+        self.objects.iter().for_each(|s| {
+            s.draw(buffer);
+        });
+        self.actors.iter().for_each(|s| {
+            s.draw(buffer);
+        });
+    }
+    fn mouse_state(&mut self, m: &MouseState) {
+        self.objects.iter_mut().for_each(|s| {
+            s.mouse_state(m);
+        });
+
+        self.actors.iter_mut().for_each(|s| {
+            s.mouse_state(m);
+        });
     }
 }

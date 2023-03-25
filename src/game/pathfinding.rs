@@ -116,9 +116,9 @@ where
 
 #[derive(Default, Debug, PartialEq, Clone, PartialOrd, Ord, Eq)]
 pub struct ShortestPath {
-    start: Point,
-    end: Point,
-    points: Vec<Point>,
+    pub start: Point,
+    pub end: Point,
+    pub points: Vec<Point>,
 }
 impl ShortestPath {
     fn new(paths: HashMap<UPoint, UPoint>, start: UPoint, goal: UPoint) -> Self {
@@ -133,6 +133,9 @@ impl ShortestPath {
     }
     pub fn lines(&self) -> impl Iterator<Item = LineSegment> + '_ {
         self.points.windows(2).map(|w| line_segment(w[0], w[1]))
+    }
+    pub fn pop(&mut self) {
+        self.points.pop();
     }
 }
 fn assemble_path(paths: HashMap<UPoint, UPoint>, start: UPoint, goal: UPoint) -> Vec<Point> {

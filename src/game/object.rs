@@ -2,7 +2,7 @@ use std::{path::Path, time::Duration};
 
 use crate::{buffer::Buffer, geometry::Point, image::Image};
 
-use super::Updatable;
+use super::{MouseState, Updatable};
 
 #[derive(Debug, PartialEq)]
 pub struct Object {
@@ -19,10 +19,7 @@ impl Object {
     }
 }
 impl Updatable for Object {
-    fn mouse_over(&mut self, _p: Point) {
-        //
-    }
-    fn mouse_click(&mut self, _p: Point) {
+    fn mouse_state(&mut self, _m: &MouseState) {
         //
     }
     fn tick(&mut self, dt: Duration) {
@@ -31,6 +28,6 @@ impl Updatable for Object {
         }
     }
     fn draw(&self, buf: &mut Buffer) {
-        self.image.draw(buf, self.location);
+        self.image.draw(buf, self.location, 1.0);
     }
 }

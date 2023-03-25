@@ -24,12 +24,12 @@ impl Buffer {
         }
     }
     pub fn draw_raw_slice(&mut self, data: &[u8]) {
-        let buffer = self.data.get_frame_mut();
+        let buffer = self.data.frame_mut();
         buffer.copy_from_slice(data)
     }
     pub fn draw_bmp<T: Into<Point>>(&mut self, bmp: &Bitmap, pos: T) {
         let pos = pos.into();
-        let buffer = self.data.get_frame_mut();
+        let buffer = self.data.frame_mut();
 
         // clipping
         let (size_w, size_h) = self.size.wh();
@@ -62,7 +62,7 @@ impl Buffer {
             .map(|p| p.into())
     }
     pub fn draw_line(&mut self, l: &LineSegment, t: LineType) {
-        let buffer = self.data.get_frame_mut();
+        let buffer = self.data.frame_mut();
         let points = l.points();
         for p in points {
             let (px, py) = p.xy();
@@ -71,7 +71,7 @@ impl Buffer {
         }
     }
     pub fn draw_point(&mut self, p: Point) {
-        let buffer = self.data.get_frame_mut();
+        let buffer = self.data.frame_mut();
         let (px, py) = p.xy();
         for x in cmp::max(px, 2) - 2..px + 2 {
             for y in cmp::max(py, 2) - 2..py + 1 {

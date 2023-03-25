@@ -1,4 +1,5 @@
 mod actor;
+mod character;
 mod game_state;
 mod object;
 mod pathfinding;
@@ -6,6 +7,7 @@ mod scenery;
 mod walkbox;
 
 pub use actor::Actor;
+pub use character::Character;
 pub use game_state::GameState;
 pub use object::Object;
 pub use pathfinding::{astar, Graph, ShortestPath};
@@ -20,13 +22,19 @@ use crate::{
 };
 
 pub trait Updatable {
-    fn mouse_over(&mut self, p: Point);
-    fn mouse_click(&mut self, p: Point);
+    fn mouse_state(&mut self, m: &MouseState);
     fn tick(&mut self, dt: Duration);
-    fn draw(&self, buf: &mut Buffer);
+    fn draw(&self, buffer: &mut Buffer);
 }
 
-fn update_location(loc: Point, dest: &Point, speed: f64, dt: Duration) -> Point {
+#[derive(Default, Debug, PartialEq, Clone, Copy)]
+pub struct MouseState {
+    position: Point,
+    left_button: bool,
+    right_button: bool,
+}
+
+fn update_location(loc: Point, dest: Point, speed: f64, dt: Duration) -> Point {
     let diff = vector(dest.x as f64 - loc.x, dest.y as f64 - loc.y);
     let hyp = (diff.x * diff.x + diff.y * diff.y).sqrt();
 

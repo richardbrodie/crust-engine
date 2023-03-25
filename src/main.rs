@@ -2,7 +2,7 @@ use buffer::Buffer;
 use game::GameState;
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{Fullscreen, WindowBuilder},
 };
@@ -53,11 +53,9 @@ fn main() {
                         game_state.mouse_over(pos)
                     }
                 }
-                WindowEvent::MouseInput {
-                    button: MouseButton::Left,
-                    state,
-                    ..
-                } => game_state.mouse_click(state),
+                WindowEvent::MouseInput { button, state, .. } => {
+                    game_state.mouse_click(button, state)
+                }
                 _ => {}
             },
             Event::RedrawRequested(_) => {
